@@ -1,0 +1,10 @@
+# folders
+.idea/
+target/
+out/
+.out/
+
+# files
+*.iml
+*.bat
+hs_err_pid*
