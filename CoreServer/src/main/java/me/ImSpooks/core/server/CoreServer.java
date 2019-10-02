@@ -20,7 +20,7 @@ public class CoreServer {
     public CoreServer(String password, int port) {
         this.password = password;
 
-        this.packetHandler = new PacketHandler(this.password);
+        this.packetHandler = new PacketHandler(this, this.password);
         this.server = new Server(port, this);
     }
 }

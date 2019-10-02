@@ -7,6 +7,7 @@ import me.ImSpooks.core.packets.handler.handlers.DatabasePacketHandler;
 import me.ImSpooks.core.packets.handler.handlers.NetworkPacketHandler;
 import me.ImSpooks.core.packets.init.Packet;
 import me.ImSpooks.core.packets.type.PacketType;
+import me.ImSpooks.core.server.CoreServer;
 import org.tinylog.Logger;
 
 import java.util.HashMap;
@@ -19,11 +20,13 @@ import java.util.Map;
 public class PacketHandler {
 
     @Getter private String password;
+    @Getter private CoreServer coreServer;
 
     @Getter private final Map<PacketType, SubPacketHandler> packetHandlers = new HashMap<>();
     public Map<AbstractClient, Boolean> confirmed = new HashMap<>();
 
-    public PacketHandler(String password) {
+    public PacketHandler(CoreServer coreServer, String password) {
+        this.coreServer = coreServer;
         this.password = password;
         this.packetHandlers.put(PacketType.NETWORK, new NetworkPacketHandler(this));
         this.packetHandlers.put(PacketType.DATABASE, new DatabasePacketHandler(this));

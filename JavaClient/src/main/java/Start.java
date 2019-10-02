@@ -46,7 +46,6 @@ public class Start {
             client.sendAndReadPacket(new PacketRequestSqlData("*", "test_table"), PacketRequestSqlDataResponse.class, new IncomingPacket<PacketRequestSqlDataResponse>(10 * 1000) {
                 @Override
                 public boolean onReceive(PacketRequestSqlDataResponse packet) {
-                    Logger.info("Received packet respone: " + packet);
                     return true;
                 }
 

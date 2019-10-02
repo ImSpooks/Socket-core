@@ -47,8 +47,12 @@ public class Client extends AbstractClient {
 
     @Override
     public void handleConnection() throws SocketDisconnectedException {
-        if (this.isConnected())
+        try {
+            if (this.isConnected())
+                throw new SocketDisconnectedException(String.format("Server listening on %s:%s has disconnected (Crash?)", this.ip, this.port));
+        } catch (SocketDisconnectedException e) {
             throw new SocketDisconnectedException(String.format("Server listening on %s:%s has disconnected (Crash?)", this.ip, this.port));
+        }
     }
 
     @Override
