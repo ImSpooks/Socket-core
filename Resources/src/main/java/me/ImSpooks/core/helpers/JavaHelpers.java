@@ -7,11 +7,15 @@ package me.ImSpooks.core.helpers;
  */
 public class JavaHelpers {
 
-    public static void sleep(int milis) {
+    public static void sleep(long milis) {
         try {
             Thread.sleep(milis);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void sleep(int milis) {
+        JavaHelpers.sleep((long) milis);
     }
 }

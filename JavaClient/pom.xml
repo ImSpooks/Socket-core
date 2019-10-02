@@ -9,21 +9,28 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>Common</artifactId>
+    <artifactId>JavaClient</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>me.ImSpooks</groupId>
+            <artifactId>Common</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.ImSpooks</groupId>
             <artifactId>Packets</artifactId>
             <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>me.ImSpooks</groupId>
             <artifactId>Resources</artifactId>
             <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
-
     </dependencies>
 
 </project>

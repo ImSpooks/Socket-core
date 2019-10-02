@@ -1,8 +1,11 @@
 package me.ImSpooks.core.packets.init;
 
+import com.google.gson.JsonParseException;
 import lombok.Getter;
 import lombok.Setter;
 import me.ImSpooks.core.helpers.Global;
+import me.ImSpooks.core.packets.init.channels.WrappedInputStream;
+import me.ImSpooks.core.packets.init.channels.WrappedOutputStream;
 import me.ImSpooks.core.packets.type.PacketType;
 import org.tinylog.Logger;
 
@@ -25,13 +28,22 @@ public abstract class Packet {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        /*System.out.println("encoded = " + Global.GSON.toJson(out.getOut()));
+        System.out.println("encoded b = " + Global.GSON.toJson(out.getOut()).getBytes());*/
         return Global.GSON.toJson(out.getOut()).getBytes();
     }
 
     @SuppressWarnings("unchecked")
-    public static <T extends Packet> T deserialize(byte[] input) {
+    public static <T extends Packet> T deserialize(byte[] input) throws IOException {
         try {
-            WrappedInputStream in = new WrappedInputStream(Global.GSON.fromJson(new String(input), ArrayList.class));
+            String decoded = new String(input).trim();
+            if (!decoded.startsWith("[")) decoded = "[" + decoded;
+
+            /*System.out.println("decoded = " + decoded);
+            System.out.println("decoded b = " + input);*/
+
+            ArrayList<Object> data = Global.GSON.fromJson(decoded, ArrayList.class);
+            WrappedInputStream in = new WrappedInputStream(data);
             
             int packetId = in.readInt();
             Packet packet = PacketRegister.createInstance(packetId);
@@ -41,7 +53,7 @@ public abstract class Packet {
 
             return (T) packet;
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new JsonParseException(e);
         } catch (Exception e) {
             Logger.error(e, "Something went wrong while deserializing packet");
         }
@@ -53,5 +65,12 @@ public abstract class Packet {
 
     public short getId() {
         return PacketRegister.getId(this);
+    }
+
+    @Override
+    public String toString() {
+        String json = Global.GSON.toJson(this);
+        json = json.substring(1, json.length() - 1);
+        return this.getClass().getSimpleName() + "[" + json + "]";
     }
 }

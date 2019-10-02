@@ -1,6 +1,9 @@
 package me.ImSpooks.core.packets.init;
 
-import me.ImSpooks.core.packets.collection.client.PacketClientName;
+import me.ImSpooks.core.packets.collection.database.mysql.PacketRequestSqlData;
+import me.ImSpooks.core.packets.collection.database.mysql.PacketRequestSqlDataResponse;
+import me.ImSpooks.core.packets.collection.network.PacketConfirmConnection;
+import me.ImSpooks.core.packets.collection.network.PacketRequestConnection;
 import me.ImSpooks.core.packets.type.PacketType;
 
 import java.lang.reflect.Constructor;
@@ -20,14 +23,23 @@ public class PacketRegister {
     private static final Map<Class<? extends Packet>, Integer> REGISTERED_IDS = new HashMap<>();
     private static final Map<Integer, PacketType> PACKET_TYPES = new HashMap<>();
 
+    private final static int MAX_PACKETS = (Short.MAX_VALUE + 1) * 2;
+
     static {
-        register(100, PacketClientName.class, PacketType.NETWORK);
+        // networking
+        register(1, PacketRequestConnection.class, PacketType.NETWORK);
+        register(2, PacketConfirmConnection.class, PacketType.NETWORK);
 
+        // database=
+        register(1, PacketRequestSqlData.class, PacketType.DATABASE);
+        register(2, PacketRequestSqlDataResponse.class, PacketType.DATABASE);
 
-        register(-1, Packet.class, PacketType.OTHER);
+        //other
     }
 
     private static void register(int id, Class<? extends Packet> packet, PacketType packetType) {
+        id = packetType.START_ID + id - 1;
+
         if (REGISTERED_PACKETS.containsKey(id)) {
             throw new IllegalArgumentException("Packet with ID " + id + " already registered");
         }
@@ -41,7 +53,7 @@ public class PacketRegister {
     }
 
     public static Packet createInstance(int id) {
-        if (id < 0 || id > Byte.MAX_VALUE && !String.valueOf(id).startsWith("-"))
+        if (id < 0 || id > MAX_PACKETS && !String.valueOf(id).startsWith("-"))
             throw new IllegalArgumentException("Illegal id range " + id);
 
         try {
@@ -64,14 +76,14 @@ public class PacketRegister {
         Integer id = REGISTERED_IDS.get(packet.getClass());
         if (id == null)
             throw new IllegalArgumentException("Unknown packet ID " + packet.getClass().getName());
-        if (id < 0 || id > Byte.MAX_VALUE)
-            throw new AssertionError("Byte had impossible value " + id);
+        if (id < 0 || id > MAX_PACKETS)
+            throw new AssertionError("Packet id had impossible value " + id);
 
-        return (byte) ((int) id);
+        return (short) ((int) id);
     }
 
     public static PacketType getPacketType(int id) {
-        if (id < 0 || id > Byte.MAX_VALUE && !String.valueOf(id).startsWith("-"))
+        if (id < 0 || id > MAX_PACKETS && !String.valueOf(id).startsWith("-"))
             throw new IllegalArgumentException("Illegal id range " + id);
         if (!PACKET_TYPES.containsKey(id))
             throw new IllegalArgumentException("Invalid packit id " + id);

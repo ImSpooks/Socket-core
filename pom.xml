@@ -11,7 +11,7 @@
     <modules>
         <module>Common</module>
         <module>CoreServer</module>
-        <module>CoreClient</module>
+        <module>JavaClient</module>
         <module>Packets</module>
         <module>Resources</module>
     </modules>

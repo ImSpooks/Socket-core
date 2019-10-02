@@ -2,6 +2,8 @@ package me.ImSpooks.core.packets.init;
 
 import me.ImSpooks.core.helpers.Compressor;
 import me.ImSpooks.core.helpers.Global;
+import me.ImSpooks.core.packets.init.channels.WrappedInputStream;
+import me.ImSpooks.core.packets.init.channels.WrappedOutputStream;
 
 import java.io.IOException;
 import java.util.ArrayList;
