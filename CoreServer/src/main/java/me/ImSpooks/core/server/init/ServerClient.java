@@ -66,4 +66,9 @@ public class ServerClient extends AbstractClient {
                 break;
         }*/
     }
+
+    @Override
+    public void write(Packet packet) {
+        super.write(packet);
+    }
 }

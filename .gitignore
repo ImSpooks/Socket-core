@@ -5,8 +5,10 @@ out/
 .out/
 logs/
 config/
+database/
 
 # files
 *.iml
 *.bat
 hs_err_pid*
+*.zip

@@ -37,7 +37,7 @@ public class Client extends AbstractClient {
         this.port = port;
         this.clientName = clientName;
 
-        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close, "Shutdown hook"));
     }
 
     @Override
@@ -57,9 +57,12 @@ public class Client extends AbstractClient {
 
     @Override
     public void handlePacket(Packet receivedPacket) {
-        if (receivedPacket == null)
+        if (receivedPacket == null) {
+            Logger.debug("Received a packet that is equal to NULL, check whats wrong.");
             return;
+        }
 
+        //System.out.println("handling received packet " + receivedPacket.getClass().getSimpleName());
         if (this.connectionConfirmed) {
             this.coreClient.getPacketReceiver().received(receivedPacket);
         }
@@ -92,30 +95,49 @@ public class Client extends AbstractClient {
             this.in = new DataInputStream(new BufferedInputStream(this.socket.getInputStream()));
             this.out = new DataOutputStream(this.socket.getOutputStream());
 
-            new Thread(() -> {
-                while (!socket.isClosed()) {
-                    try {
-                        handleConnection();
-                    } catch (SocketDisconnectedException e) {
-                        Logger.warn("Connection to server lost, trying again in {} seconds", RECONNECT_INTERVAL / 1000L);
-                        JavaHelpers.sleep(RECONNECT_INTERVAL);
-                        initialize();
+            new Thread(new Runnable() {
+                void disconnect() {
+                    connectionConfirmed = false;
+                    JavaHelpers.sleep(RECONNECT_INTERVAL);
+                    initialize();
+                }
+                @Override
+                public void run() {
+                    while (!socket.isClosed()) {
+                        try {
+                            JavaHelpers.sleep(RECONNECT_INTERVAL);
+                            handleConnection();
+                        } catch (SocketDisconnectedException e) {
+                            Logger.warn("Connection to server lost, trying again in {} seconds", RECONNECT_INTERVAL / 1000L);
+                            disconnect();
+                            break;
+                        } catch (Exception e) {
+                            Logger.warn(e, "Connection to server lost duo to a strange error, trying again in {} seconds", RECONNECT_INTERVAL / 1000L);
+                            disconnect();
+                            break;
+                        }
                     }
                 }
-            });
+            }, "Connection handler").start();
 
             new Thread(() -> {
                 started = true;
                 while (!socket.isClosed()) {
-                    handleClient();
+                    try {
+                            handleClient();
+                    } catch (Exception e) {
+                        Logger.error(e);
+                        break;
+                    }
                 }
                 started = false;
-            }).start();
+            }, "Client handler").start();
 
             this.write(new PacketRequestConnection(this.coreClient.getPassword(), this.coreClient.getVerificationId(), this.clientName));
 
         } catch (IOException e) {
             Logger.info("No connection established, trying again in {} seconds", RECONNECT_INTERVAL / 1000L);
+            connectionConfirmed = false;
             JavaHelpers.sleep(RECONNECT_INTERVAL);
             initialize();
         }

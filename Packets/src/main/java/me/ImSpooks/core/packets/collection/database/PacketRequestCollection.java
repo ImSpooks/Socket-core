@@ -1,4 +1,4 @@
-package me.ImSpooks.core.packets.collection.database.mysql;
+package me.ImSpooks.core.packets.collection.database;
 
 import lombok.Getter;
 import me.ImSpooks.core.packets.init.Packet;
@@ -8,28 +8,27 @@ import me.ImSpooks.core.packets.init.channels.WrappedOutputStream;
 import java.io.IOException;
 
 /**
- * Created by Nick on 02 okt. 2019.
+ * Created by Nick on 09 okt. 2019.
  * Copyright © ImSpooks
  */
-public class PacketRequestSqlDataResponse extends Packet {
+public class PacketRequestCollection extends Packet {
 
-    @Getter private Object data = "test?";
+    @Getter private String collection;
 
-    public PacketRequestSqlDataResponse(Object data) {
-
+    public PacketRequestCollection(String collection) {
+        this.collection = collection;
     }
 
-    public PacketRequestSqlDataResponse() {
+    public PacketRequestCollection() {
     }
 
     @Override
     public void send(WrappedOutputStream out) throws IOException {
-        out.writeTypePrefixed(data);
-
+        out.writeString(this.collection);
     }
 
     @Override
     public void receive(WrappedInputStream in) throws IOException {
-        this.data = in.readTypePrefixed();
+        this.collection = in.readString();
     }
 }

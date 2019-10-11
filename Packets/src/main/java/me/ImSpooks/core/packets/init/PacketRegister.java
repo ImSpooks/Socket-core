@@ -1,7 +1,6 @@
 package me.ImSpooks.core.packets.init;
 
-import me.ImSpooks.core.packets.collection.database.mysql.PacketRequestSqlData;
-import me.ImSpooks.core.packets.collection.database.mysql.PacketRequestSqlDataResponse;
+import me.ImSpooks.core.packets.collection.database.*;
 import me.ImSpooks.core.packets.collection.network.PacketConfirmConnection;
 import me.ImSpooks.core.packets.collection.network.PacketRequestConnection;
 import me.ImSpooks.core.packets.type.PacketType;
@@ -31,8 +30,11 @@ public class PacketRegister {
         register(2, PacketConfirmConnection.class, PacketType.NETWORK);
 
         // database=
-        register(1, PacketRequestSqlData.class, PacketType.DATABASE);
-        register(2, PacketRequestSqlDataResponse.class, PacketType.DATABASE);
+        register(1, PacketRequestData.class, PacketType.DATABASE);
+        register(2, PacketRequestDataResponse.class, PacketType.DATABASE);
+        register(3, PacketRequestCollection.class, PacketType.DATABASE);
+        register(4, PacketRequestCollectionResponse.class, PacketType.DATABASE);
+        register(5, PacketUpdateData.class, PacketType.DATABASE);
 
         //other
     }
@@ -41,7 +43,7 @@ public class PacketRegister {
         id = packetType.START_ID + id - 1;
 
         if (REGISTERED_PACKETS.containsKey(id)) {
-            throw new IllegalArgumentException("Packet with ID " + id + " already registered");
+            throw new IllegalArgumentException(String.format("Packet with ID %s already registered for type %s", id - packetType.START_ID + 1, packetType));
         }
         if (REGISTERED_IDS.containsKey(packet)) {
             throw new IllegalArgumentException("Packet " + packet + " already registered");
@@ -88,6 +90,15 @@ public class PacketRegister {
         if (!PACKET_TYPES.containsKey(id))
             throw new IllegalArgumentException("Invalid packit id " + id);
         return PACKET_TYPES.get(id);
+    }
+
+    public static String getPacketName(int id) {
+        if (id < 0 || id > MAX_PACKETS && !String.valueOf(id).startsWith("-"))
+            throw new IllegalArgumentException("Illegal id range " + id);
+        if (!REGISTERED_PACKETS.containsKey(id))
+            throw new IllegalArgumentException("Invalid packit id " + id);
+
+        return REGISTERED_PACKETS.get(id).getSimpleName();
     }
 
     public static List<Class<? extends Packet>> getPackets() {

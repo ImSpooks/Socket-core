@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -30,6 +31,7 @@ public class Server implements IServer {
 
     @Getter private CoreServer coreServer;
 
+
     public Server(int port, CoreServer coreServer) {
         this.coreServer = coreServer;
         this.port = port;
@@ -42,31 +44,32 @@ public class Server implements IServer {
         }
 
 
-        new Thread(this::handleClients).start();
-        new Thread(this::handleServer).start();
-
-        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
+        new Thread(this::handleClients, "Client handler").start();
+        new Thread(this::handleServer, "Server handler").start();
     }
 
     @Override
     public void handleServer() {
         while (!this.serverSocket.isClosed()) {
-
             Iterator<ServerClient> iterator = this.clients.iterator();
 
-            while (iterator.hasNext()) {
-                ServerClient client = iterator.next();
-                try {
-                    client.handleConnection();
-                    client.handleClient();
-                } catch (SocketDisconnectedException e) {
-                    iterator.remove();
-                    Logger.info("Client \'{}\' on ip \'{}\' was disconnected.", client.getClientName().isEmpty() ? "unknown" : client.getClientName(), client.getSocket().getInetAddress().getHostAddress());
-                } catch (Exception e) {
-                    iterator.remove();
-                    Logger.error(e, "Something went wrong with client \'{}\', removing them from the list", client == null || client.getClientName().isEmpty() ? "unknown" : client.getClientName());
-                    client.close();
+            try {
+                while (iterator.hasNext()) {
+                    ServerClient client = iterator.next();
+                    try {
+                        client.handleConnection();
+                        client.handleClient();
+                    } catch (SocketDisconnectedException e) {
+                        iterator.remove();
+                        Logger.info("Client \'{}\' on ip \'{}\' was disconnected.", client.getClientName().isEmpty() ? "unknown" : client.getClientName(), client.getSocket().getInetAddress().getHostAddress());
+                    } catch (Exception e) {
+                        iterator.remove();
+                        Logger.error(e, "Something went wrong with client \'{}\', removing them from the list", client == null || client.getClientName().isEmpty() ? "unknown" : client.getClientName());
+                        client.close();
+                    }
                 }
+            } catch (ConcurrentModificationException ignored) {
+                // why does this even exist
             }
         }
     }
@@ -76,7 +79,10 @@ public class Server implements IServer {
         this.started = true;
         while (!this.serverSocket.isClosed()) {
             try {
+                if (serverSocket.isClosed())
+                    break;
                 Socket socket = serverSocket.accept();
+
                 ServerClient client = new ServerClient(socket, this.coreServer);
                 client.connect();
 
@@ -101,9 +107,8 @@ public class Server implements IServer {
     public void close() {
         try {
             this.serverSocket.close();
-
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.error(e);
         }
     }
 }

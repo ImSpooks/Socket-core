@@ -13,11 +13,12 @@ import java.io.IOException;
  * No part of this publication may be reproduced, distributed, or transmitted in any form or by any means.
  * Copyright © ImSpooks
  */
+@Getter
 public class PacketRequestConnection extends Packet {
 
-    @Getter private String password;
-    @Getter private long randomKey;
-    @Getter private String clientName;
+    private String password;
+    private long randomKey;
+    private String clientName;
 
     public PacketRequestConnection(String password, long randomKey, String clientName) {
         this.password = password;

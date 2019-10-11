@@ -8,9 +8,16 @@ public abstract class IncomingPacket<T extends Packet> {
 
     private final long registerTime = System.currentTimeMillis();
     private final long expireAfter;
+    private final boolean handleMultiple;
 
     public IncomingPacket(long expireAfter) {
         this.expireAfter = expireAfter;
+        this.handleMultiple = false;
+    }
+
+    public IncomingPacket(long expireAfter, boolean handleMultiple) {
+        this.expireAfter = expireAfter;
+        this.handleMultiple = true;
     }
 
     public boolean hasExpired() {
@@ -24,4 +31,8 @@ public abstract class IncomingPacket<T extends Packet> {
 
     public abstract boolean onReceive(T packet);
     public abstract void onExpire();
+
+    public boolean handleMultiple() {
+        return this.handleMultiple;
+    }
 }

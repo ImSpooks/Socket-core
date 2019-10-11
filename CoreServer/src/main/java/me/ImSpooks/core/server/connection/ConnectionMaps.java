@@ -19,7 +19,8 @@ public class ConnectionMaps {
             while (true) {
                 JavaHelpers.sleep(1000 * 60);
                 blockedHosts.clear();
+                connectionAttempts.clear();
             }
-        });
+        }, "Clear blocked hosts Thread").start();
     }
 }

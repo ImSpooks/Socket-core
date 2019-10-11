@@ -1,4 +1,4 @@
-package me.ImSpooks.core.database.data;
+package me.ImSpooks.core.common.database;
 
 import lombok.Getter;
 

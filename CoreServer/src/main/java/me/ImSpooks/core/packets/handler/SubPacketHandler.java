@@ -40,15 +40,20 @@ public class SubPacketHandler {
         }
     }
 
-    public void handlePacket(Packet packet, AbstractClient client) {
+    public boolean handlePacket(Packet packet, AbstractClient client) {
+        if (!METHODS.containsKey(packet.getClass())) {
+            Logger.warn("There is no packet handler found for packet \'{}\'", packet.getClass().getSimpleName());
+            return false;
+        }
+
         try {
             METHODS.get(packet.getClass()).invoke(this, packet, client);
-            return;
+            return true;
         } catch (IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
             // Method not found
             Logger.error(e, "There was en error thrown while invoking handling method for packet \'{}\'", packet.getClass().getName());
+            return false;
         }
-        Logger.warn("There is no packet handler found for packet \'{}\'", packet.getClass().getSimpleName());
     }
 }

@@ -18,12 +18,23 @@ public class PacketReceiver {
 
     public void received(Packet packet) {
         synchronized (this.listeners) {
-            Set<IncomingPacket<? extends Packet>> registered = this.listeners.get(packet.getClass());
+            if (this.listeners.get(packet.getClass()).isEmpty())
+                return;
 
-            if (registered == null || registered.isEmpty()) {
+            IncomingPacket<? extends Packet> registered = this.listeners.get(packet.getClass()).iterator().next();
+
+            if (registered == null) {
                 return;
             }
-            registered.removeIf(listener -> listener.receive(packet));
+
+            // only handles one packet receiver
+            if (registered.receive(packet)) {
+                this.listeners.get(packet.getClass()).remove(registered);
+
+                // handle next one if this multiple listeners are using a single packet
+            }
+            if (registered.handleMultiple())
+                this.received(packet);
         }
     }
 

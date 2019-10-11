@@ -15,6 +15,8 @@ import java.util.ArrayList;
  */
 public abstract class CompressedPacket extends Packet {
 
+    // DOESNT WORK YET
+
     @Override
     public void send(WrappedOutputStream out) throws IOException {
         this.write(out);

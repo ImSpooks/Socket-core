@@ -1,6 +1,7 @@
 package me.ImSpooks.core.packets.init;
 
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonSyntaxException;
 import lombok.Getter;
 import lombok.Setter;
 import me.ImSpooks.core.helpers.Global;
@@ -23,29 +24,25 @@ public abstract class Packet {
 
     public byte[] serialize(WrappedOutputStream out) {
         try {
-            out.write((int) this.getId());
+            out.writeInt(this.getId());
             this.send(out);
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.error(e, "Something went wrong while serializing packet {}", this.getClass().getSimpleName());
         }
-        /*System.out.println("encoded = " + Global.GSON.toJson(out.getOut()));
-        System.out.println("encoded b = " + Global.GSON.toJson(out.getOut()).getBytes());*/
         return Global.GSON.toJson(out.getOut()).getBytes();
     }
 
     @SuppressWarnings("unchecked")
-    public static <T extends Packet> T deserialize(byte[] input) throws IOException {
+    public static <T extends Packet> T deserialize(String input) throws IOException {
+        int packetId = -1;
         try {
-            String decoded = new String(input).trim();
-            if (!decoded.startsWith("[")) decoded = "[" + decoded;
+            input = input.trim();
+            if (!input.startsWith("[")) input = "[" + input;
 
-            /*System.out.println("decoded = " + decoded);
-            System.out.println("decoded b = " + input);*/
-
-            ArrayList<Object> data = Global.GSON.fromJson(decoded, ArrayList.class);
+            ArrayList<Object> data = Global.GSON.fromJson(input, ArrayList.class);
             WrappedInputStream in = new WrappedInputStream(data);
-            
-            int packetId = in.readInt();
+
+            packetId = in.readInt();
             Packet packet = PacketRegister.createInstance(packetId);
 
             packet.setType(PacketRegister.getPacketType(packetId));
@@ -54,10 +51,17 @@ public abstract class Packet {
             return (T) packet;
         } catch (IOException e) {
             throw new JsonParseException(e);
+        } catch (JsonSyntaxException e) {
+            Logger.error(e, "Deserializing json went wrong for packet {} with input \'{}\'", packetId != -1 ? PacketRegister.getPacketName(packetId) : "\"unknown\"", input);
         } catch (Exception e) {
-            Logger.error(e, "Something went wrong while deserializing packet");
+            Logger.error(e, "Something went wrong while deserializing packet {} with input \'{}\'", packetId != -1 ? PacketRegister.getPacketName(packetId) : "\"unknown\"", input);
         }
         return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T extends Packet> T deserialize(byte[] input) throws IOException {
+        return deserialize(new String(input));
     }
 
     public abstract void send(WrappedOutputStream out) throws IOException;

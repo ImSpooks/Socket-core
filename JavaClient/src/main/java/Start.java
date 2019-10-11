@@ -1,7 +1,9 @@
 import me.ImSpooks.core.client.CoreClient;
 import me.ImSpooks.core.common.json.JSONConfig;
-import me.ImSpooks.core.packets.collection.database.mysql.PacketRequestSqlData;
-import me.ImSpooks.core.packets.collection.database.mysql.PacketRequestSqlDataResponse;
+import me.ImSpooks.core.helpers.Global;
+import me.ImSpooks.core.packets.collection.database.PacketRequestCollection;
+import me.ImSpooks.core.packets.collection.database.PacketRequestCollectionResponse;
+import me.ImSpooks.core.packets.collection.database.PacketUpdateData;
 import me.ImSpooks.core.packets.init.IncomingPacket;
 import me.ImSpooks.core.packets.security.InvalidCredentialsException;
 import me.ImSpooks.core.packets.security.SecurityEncryption;
@@ -43,17 +45,63 @@ public class Start {
 
 
         client.setCoreConnected(() -> {
-            client.sendAndReadPacket(new PacketRequestSqlData("*", "test_table"), PacketRequestSqlDataResponse.class, new IncomingPacket<PacketRequestSqlDataResponse>(10 * 1000) {
+            client.sendAndReadPacket(new PacketRequestCollection("test_table"), PacketRequestCollectionResponse.class, new IncomingPacket<PacketRequestCollectionResponse>(10 * 1000) {
                 @Override
-                public boolean onReceive(PacketRequestSqlDataResponse packet) {
+                public boolean onReceive(PacketRequestCollectionResponse packet) {
                     return true;
                 }
 
                 @Override
                 public void onExpire() {
-
+                    Logger.info("Packet listener expired");
                 }
             });
+
+            client.sendPacket(new PacketUpdateData("test_table", "id", 1, "test_val", "test"));
+
+            client.sendAndReadPacket(new PacketRequestCollection("test_table"), PacketRequestCollectionResponse.class, new IncomingPacket<PacketRequestCollectionResponse>(10 * 1000) {
+                @Override
+                public boolean onReceive(PacketRequestCollectionResponse packet) {
+                    Logger.info("data 2:  " + Global.GSON.toJson(packet.getDocuments()));
+                    return true;
+                }
+
+                @Override
+                public void onExpire() {
+                    Logger.info("Packet listener expired");
+                }
+            });
+
+            client.sendPacket(new PacketUpdateData("test_table", "id", 1, "test_val", null));
+
+            client.sendAndReadPacket(new PacketRequestCollection("test_table"), PacketRequestCollectionResponse.class, new IncomingPacket<PacketRequestCollectionResponse>(10 * 1000) {
+                @Override
+                public boolean onReceive(PacketRequestCollectionResponse packet) {
+                    Logger.info("data 3:  " + Global.GSON.toJson(packet.getDocuments()));
+                    return true;
+                }
+
+                @Override
+                public void onExpire() {
+                    Logger.info("Packet listener expired");
+                }
+            });
+
+            client.sendPacket(new PacketUpdateData("test_table", "id", 1, "test_val", 4.0F));
+
+            client.sendAndReadPacket(new PacketRequestCollection("test_table"), PacketRequestCollectionResponse.class, new IncomingPacket<PacketRequestCollectionResponse>(10 * 1000) {
+                @Override
+                public boolean onReceive(PacketRequestCollectionResponse packet) {
+                    Logger.info("data 4:  " + Global.GSON.toJson(packet.getDocuments()));
+                    return true;
+                }
+
+                @Override
+                public void onExpire() {
+                    Logger.info("Packet listener expired");
+                }
+            });
+
         });
     }
 }

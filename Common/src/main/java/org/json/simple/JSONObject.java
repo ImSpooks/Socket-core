@@ -10,6 +10,7 @@ import java.io.Writer;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A JSON object. Key value pairs are unordered. JSONObject supports java.util.Map interface.
@@ -132,5 +133,17 @@ public class JSONObject extends LinkedHashMap implements Map, JSONAware, JSONStr
 
 	public <T> T get(Object key, Class<T> clazz) {
 		return clazz.cast(this.get(key));
+	}
+
+	public void expect(String key, Object defVal) {
+		Object val = this.get(key);
+		if (val == null) {
+			this.put(key, defVal);
+		}
+	}
+
+	@Override
+	public Set<Map.Entry<String, Object>> entrySet() {
+		return super.entrySet();
 	}
 }

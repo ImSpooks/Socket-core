@@ -24,11 +24,11 @@ public class JSONConfig {
 
 
     public JSONConfig(String dir, String fileName)  {
-        this(new File(path + File.separator + dir.replace("/", File.separator)), new File(path + File.separator + dir.replace("/", File.separator), fileName));
+        this(new File(path + File.separator + dir.replace("/", File.separator)), new File(path + File.separator + dir.replace("/", File.separator), fileName.replace("/", File.separator)));
     }
 
     public JSONConfig(String fileName)  {
-        this(path, fileName);
+        this("", fileName);
     }
 
     public JSONConfig(File parent, File file) {
@@ -60,12 +60,9 @@ public class JSONConfig {
 
     public void save() {
         try {
-            Writer out = new FileWriter(this.file, false);
-            try {
+            try (Writer out = new FileWriter(this.file, false)) {
                 String input = this.main.toJSONString();
                 out.write(new GsonBuilder().setPrettyPrinting().create().toJson(new JsonParser().parse(input)));
-            } finally {
-                out.close();
             }
         } catch (IOException e) {
             Logger.error(e);
@@ -146,9 +143,15 @@ public class JSONConfig {
     public JSONArray getArray(String key) {
         Object val = this.main.get(key);
         if (val == null) {
-            throw new IllegalArgumentException("Key " + key + " was not found");
+            return new JSONArray();
+            //throw new IllegalArgumentException("Key " + key + " was not found");
         }
         return (JSONArray) val;
+    }
+
+    @SuppressWarnings("unchecked")
+    public JSONArray<JSONObject> getJsonArray(String key) {
+        return (JSONArray<JSONObject>) this.getArray(key);
     }
 
     public boolean getBoolean(String key) {
@@ -160,5 +163,29 @@ public class JSONConfig {
             return (Boolean) val;
         }
         return false;
+    }
+
+    public Object get(String key) {
+        Object val = this.main.get(key);
+        if (val == null) {
+            throw new IllegalArgumentException("Key " + key + " was not found");
+        }
+        return val;
+    }
+
+    public <T> T get(String key, Class<T> clazz) {
+        Object val = this.main.get(key);
+        if (val == null) {
+            throw new IllegalArgumentException("Key " + key + " was not found");
+        }
+        if (clazz.isInstance(val)) {
+            clazz.cast(val);
+        }
+        return null;
+    }
+
+    @Override
+    public String toString() {
+        return this.main.toJSONString();
     }
 }

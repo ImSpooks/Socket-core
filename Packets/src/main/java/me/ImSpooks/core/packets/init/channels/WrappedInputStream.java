@@ -1,10 +1,13 @@
 package me.ImSpooks.core.packets.init.channels;
 
 import lombok.Getter;
+import me.ImSpooks.core.helpers.Global;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
@@ -33,15 +36,15 @@ public class WrappedInputStream {
 	}
 
 	public boolean readBoolean() throws IOException {
-		return this.read(boolean.class);
+		return this.read(Boolean.class);
 	}
 
 	public double readDouble() throws IOException {
-		return this.read(double.class);
+		return this.read(Double.class);
 	}
 
 	public float readFloat() throws IOException {
-		return this.read(float.class);
+		return (float) this.read(Double.class).doubleValue();
 	}
 
 	public int readInt() throws IOException {
@@ -131,16 +134,22 @@ public class WrappedInputStream {
 			case 3:
 				return this.readDouble();
 			case 4:
-				return this.readBoolean();
+				return this.readFloat();
 			case 5:
-				return this.in.get(index++);
+				return this.readBoolean();
 			case 6:
+				return this.in.get(index++);
+			case 7:
 				int size = this.readInt();
 				List<Object> list = new ArrayList<>(size);
 				for (int i = 0; i < size; i++) {
 					list.add(this.readTypePrefixed());
 				}
 				return list;
+			case 8:
+				return Global.GSON.fromJson(this.readString(), LinkedHashMap.class);
+			case 9:
+				return Global.GSON.fromJson(this.readString(), HashMap.class);
 			default:
 				throw new UnsupportedOperationException(String.format("Cannot read data with given id \'%s\'", id));
 		}

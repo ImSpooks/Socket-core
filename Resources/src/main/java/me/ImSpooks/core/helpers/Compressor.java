@@ -12,6 +12,8 @@ import java.util.zip.Inflater;
  */
 public class Compressor {
 
+	// DOESNT WORK YET
+
 	private static final ThreadLocal<Deflater> COMPRESSOR = ThreadLocal.withInitial(() -> new Deflater(7));
 
 	private static final ThreadLocal<Inflater> DECOMPRESSOR = ThreadLocal.withInitial(Inflater::new);

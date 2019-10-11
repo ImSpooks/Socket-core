@@ -1,12 +1,12 @@
 package me.ImSpooks.core.packets.init.channels;
 
 import lombok.Getter;
+import me.ImSpooks.core.helpers.Global;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by Nick on 30 Sep 2019.
@@ -83,22 +83,33 @@ public class WrappedOutputStream {
             this.write(3);
             this.writeDouble((Double) o);
         }
-        else if (o instanceof Boolean) {
+        else if (o instanceof Float) {
             this.write(4);
+            this.writeFloat((Float) o);
+        }
+        else if (o instanceof Boolean) {
+            this.write(5);
             this.writeBoolean((Boolean) o);
         }
         else if (o instanceof byte[]) {
-            this.write(5);
+            this.write(6);
             this.writeInt(((byte[]) o).length);
             this.out.add((byte[]) o);
         }
         else if (o instanceof List) {
             List<?> list = (List<?>) o;
-            this.write(6);
+            this.write(7);
             this.writeInt(list.size());
             for (Object inList : list) {
                 this.writeTypePrefixed(inList);
             }
+        }
+        else if (o instanceof Map) {
+            HashMap<?, ?> map = (HashMap<?, ?>) o;
+            if (o instanceof LinkedHashMap)
+                this.write(8);
+            else this.write(9);
+            this.writeString(Global.GSON.toJson(o));
         }
         else {
             throw new UnsupportedOperationException(String.format("Cannot write data with class \'%s\'", o.getClass().getSimpleName()));
