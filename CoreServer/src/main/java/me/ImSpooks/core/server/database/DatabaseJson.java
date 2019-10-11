@@ -96,8 +96,7 @@ public class DatabaseJson extends IDatabase {
             }
         }
 
-        // TODO get data from specific key with value in collection
-        return new Document();
+        return document;
     }
 
     @SuppressWarnings("unchecked")
