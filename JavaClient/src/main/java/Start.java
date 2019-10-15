@@ -5,6 +5,7 @@ import me.ImSpooks.core.packets.collection.database.PacketRequestCollection;
 import me.ImSpooks.core.packets.collection.database.PacketRequestCollectionResponse;
 import me.ImSpooks.core.packets.collection.database.PacketUpdateData;
 import me.ImSpooks.core.packets.init.IncomingPacket;
+import me.ImSpooks.core.packets.init.Packet;
 import me.ImSpooks.core.packets.security.InvalidCredentialsException;
 import me.ImSpooks.core.packets.security.SecurityEncryption;
 import me.ImSpooks.core.packets.security.shared.SharedEncryption;
@@ -12,7 +13,6 @@ import org.tinylog.Logger;
 
 /**
  * Created by Nick on 27 sep. 2019.
- * No part of this publication may be reproduced, distributed, or transmitted in any form or by any means.
  * Copyright © ImSpooks
  */
 public class Start {
@@ -45,9 +45,10 @@ public class Start {
 
 
         client.setCoreConnected(() -> {
-            client.sendAndReadPacket(new PacketRequestCollection("test_table"), PacketRequestCollectionResponse.class, new IncomingPacket<PacketRequestCollectionResponse>(10 * 1000) {
+            client.sendAndReadPacket(new PacketRequestCollection("test_table"), Packet.class, new IncomingPacket<PacketRequestCollectionResponse>(10 * 1000) {
                 @Override
                 public boolean onReceive(PacketRequestCollectionResponse packet) {
+                    Logger.info("data 1:  " + Global.GSON.toJson(packet.getDocuments()));
                     return true;
                 }
 
@@ -59,7 +60,7 @@ public class Start {
 
             client.sendPacket(new PacketUpdateData("test_table", "id", 1, "test_val", "test"));
 
-            client.sendAndReadPacket(new PacketRequestCollection("test_table"), PacketRequestCollectionResponse.class, new IncomingPacket<PacketRequestCollectionResponse>(10 * 1000) {
+            client.sendAndReadPacket(new PacketRequestCollection("test_table"), Packet.class, new IncomingPacket<PacketRequestCollectionResponse>(10 * 1000) {
                 @Override
                 public boolean onReceive(PacketRequestCollectionResponse packet) {
                     Logger.info("data 2:  " + Global.GSON.toJson(packet.getDocuments()));
@@ -74,7 +75,7 @@ public class Start {
 
             client.sendPacket(new PacketUpdateData("test_table", "id", 1, "test_val", null));
 
-            client.sendAndReadPacket(new PacketRequestCollection("test_table"), PacketRequestCollectionResponse.class, new IncomingPacket<PacketRequestCollectionResponse>(10 * 1000) {
+            client.sendAndReadPacket(new PacketRequestCollection("test_table"), Packet.class, new IncomingPacket<PacketRequestCollectionResponse>(10 * 1000) {
                 @Override
                 public boolean onReceive(PacketRequestCollectionResponse packet) {
                     Logger.info("data 3:  " + Global.GSON.toJson(packet.getDocuments()));
@@ -89,7 +90,7 @@ public class Start {
 
             client.sendPacket(new PacketUpdateData("test_table", "id", 1, "test_val", 4.0F));
 
-            client.sendAndReadPacket(new PacketRequestCollection("test_table"), PacketRequestCollectionResponse.class, new IncomingPacket<PacketRequestCollectionResponse>(10 * 1000) {
+            client.sendAndReadPacket(new PacketRequestCollection("test_table"), Packet.class, new IncomingPacket<PacketRequestCollectionResponse>(10 * 1000) {
                 @Override
                 public boolean onReceive(PacketRequestCollectionResponse packet) {
                     Logger.info("data 4:  " + Global.GSON.toJson(packet.getDocuments()));

@@ -10,7 +10,6 @@ import java.util.*;
 
 /**
  * Created by Nick on 30 Sep 2019.
- * No part of this publication may be reproduced, distributed, or transmitted in any form or by any means.
  * Copyright © ImSpooks
  */
 public class WrappedOutputStream {
@@ -94,7 +93,7 @@ public class WrappedOutputStream {
         else if (o instanceof byte[]) {
             this.write(6);
             this.writeInt(((byte[]) o).length);
-            this.out.add((byte[]) o);
+            this.out.add(o);
         }
         else if (o instanceof List) {
             List<?> list = (List<?>) o;
@@ -109,7 +108,7 @@ public class WrappedOutputStream {
             if (o instanceof LinkedHashMap)
                 this.write(8);
             else this.write(9);
-            this.writeString(Global.GSON.toJson(o));
+            this.writeString(Global.GSON.toJson(map));
         }
         else {
             throw new UnsupportedOperationException(String.format("Cannot write data with class \'%s\'", o.getClass().getSimpleName()));

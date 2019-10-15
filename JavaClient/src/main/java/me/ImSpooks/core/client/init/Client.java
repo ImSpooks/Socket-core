@@ -124,7 +124,7 @@ public class Client extends AbstractClient {
                 started = true;
                 while (!socket.isClosed()) {
                     try {
-                            handleClient();
+                        handleClient();
                     } catch (Exception e) {
                         Logger.error(e);
                         break;

@@ -15,15 +15,16 @@ import java.util.ArrayList;
 
 /**
  * Created by Nick on 27 sep. 2019.
- * No part of this publication may be reproduced, distributed, or transmitted in any form or by any means.
  * Copyright © ImSpooks
  */
 public abstract class Packet {
 
     @Getter private @Setter PacketType type;
 
-    public byte[] serialize(WrappedOutputStream out) {
+    public byte[] serialize() {
+        WrappedOutputStream out = new WrappedOutputStream();
         try {
+            out.write(1); // to make sure packet id doesnt get corrupted
             out.writeInt(this.getId());
             this.send(out);
         } catch (IOException e) {
@@ -42,6 +43,7 @@ public abstract class Packet {
             ArrayList<Object> data = Global.GSON.fromJson(input, ArrayList.class);
             WrappedInputStream in = new WrappedInputStream(data);
 
+            in.skip();
             packetId = in.readInt();
             Packet packet = PacketRegister.createInstance(packetId);
 
@@ -59,7 +61,6 @@ public abstract class Packet {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     public static <T extends Packet> T deserialize(byte[] input) throws IOException {
         return deserialize(new String(input));
     }
@@ -67,8 +68,11 @@ public abstract class Packet {
     public abstract void send(WrappedOutputStream out) throws IOException;
     public abstract void receive(WrappedInputStream in) throws IOException;
 
-    public short getId() {
-        return PacketRegister.getId(this);
+    private int id = -1;
+    public int getId() {
+        if (this.id == -1)
+            this.id = PacketRegister.getId(this);
+        return this.id;
     }
 
     @Override

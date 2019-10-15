@@ -17,7 +17,6 @@ import java.util.List;
 
 /**
  * Created by Nick on 26 sep. 2019.
- * No part of this publication may be reproduced, distributed, or transmitted in any form or by any means.
  * Copyright © ImSpooks
  */
 public class Server implements IServer {
@@ -40,7 +39,7 @@ public class Server implements IServer {
         try {
             this.serverSocket = new ServerSocket(this.port);
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.error(e);
         }
 
 
@@ -56,6 +55,12 @@ public class Server implements IServer {
             try {
                 while (iterator.hasNext()) {
                     ServerClient client = iterator.next();
+
+                    if (client.getSocket().isClosed()) {
+                        iterator.remove();
+                        continue;
+                    }
+
                     try {
                         client.handleConnection();
                         client.handleClient();
@@ -64,7 +69,7 @@ public class Server implements IServer {
                         Logger.info("Client \'{}\' on ip \'{}\' was disconnected.", client.getClientName().isEmpty() ? "unknown" : client.getClientName(), client.getSocket().getInetAddress().getHostAddress());
                     } catch (Exception e) {
                         iterator.remove();
-                        Logger.error(e, "Something went wrong with client \'{}\', removing them from the list", client == null || client.getClientName().isEmpty() ? "unknown" : client.getClientName());
+                        Logger.error(e, "Something went wrong with client \'{}\', removing them from the list", client.getClientName().isEmpty() ? "unknown" : client.getClientName());
                         client.close();
                     }
                 }
@@ -85,10 +90,11 @@ public class Server implements IServer {
 
                 ServerClient client = new ServerClient(socket, this.coreServer);
                 client.connect();
+                Logger.info("Client \'{}\' on ip \'{}\' connected, waiting for approval.", client.getClientName().isEmpty() ? "unknown" : client.getClientName(), client.getSocket().getInetAddress().getHostAddress());
 
                 this.clients.add(client);
             } catch (IOException e) {
-                e.printStackTrace();
+                Logger.error(e);
             }
         }
         this.started = false;

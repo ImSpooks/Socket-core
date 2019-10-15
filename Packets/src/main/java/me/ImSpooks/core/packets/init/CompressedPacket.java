@@ -10,7 +10,6 @@ import java.util.ArrayList;
 
 /**
  * Created by Nick on 01 okt. 2019.
- * No part of this publication may be reproduced, distributed, or transmitted in any form or by any means.
  * Copyright © ImSpooks
  */
 public abstract class CompressedPacket extends Packet {

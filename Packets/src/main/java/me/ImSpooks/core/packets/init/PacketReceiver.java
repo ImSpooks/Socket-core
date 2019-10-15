@@ -9,6 +9,7 @@ import java.util.*;
 public class PacketReceiver {
 
     private final Map<Class<? extends Packet>, Set<IncomingPacket<? extends Packet>>> listeners = new HashMap<>();
+    private final Set<IncomingPacket<? extends Packet>> globalListeners = new HashSet<>();
 
     public PacketReceiver() {
         for (Class<? extends Packet> packet : PacketRegister.getPackets()) {
@@ -55,6 +56,11 @@ public class PacketReceiver {
     }
 
     public void addListener(Class<? extends Packet> packet, IncomingPacket<? extends Packet> incomingPacket) {
-        this.listeners.get(packet).add(incomingPacket);
+        if (packet == Packet.class) {
+            this.globalListeners.add(incomingPacket);
+        }
+        else {
+            this.listeners.get(packet).add(incomingPacket);
+        }
     }
 }

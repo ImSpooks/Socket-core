@@ -1,5 +1,7 @@
 package me.ImSpooks.core.packets.init;
 
+import lombok.Getter;
+
 /**
  * Created by Nick on 02 okt. 2019.
  * Copyright © ImSpooks
@@ -7,7 +9,7 @@ package me.ImSpooks.core.packets.init;
 public abstract class IncomingPacket<T extends Packet> {
 
     private final long registerTime = System.currentTimeMillis();
-    private final long expireAfter;
+    @Getter private final long expireAfter;
     private final boolean handleMultiple;
 
     public IncomingPacket(long expireAfter) {

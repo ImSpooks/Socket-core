@@ -4,13 +4,13 @@ import lombok.Getter;
 import lombok.Setter;
 import me.ImSpooks.core.client.init.Client;
 import me.ImSpooks.core.helpers.Global;
+import me.ImSpooks.core.helpers.JavaHelpers;
 import me.ImSpooks.core.packets.init.IncomingPacket;
 import me.ImSpooks.core.packets.init.Packet;
 import me.ImSpooks.core.packets.init.PacketReceiver;
 
 /**
  * Created by Nick on 26 sep. 2019.
- * No part of this publication may be reproduced, distributed, or transmitted in any form or by any means.
  * Copyright © ImSpooks
  */
 public class CoreClient {
@@ -36,6 +36,12 @@ public class CoreClient {
 
         this.client = new Client(this.ip, this.port, this.clientName, this);
 
+        new Thread(() -> {
+            while (true) {
+                JavaHelpers.sleep(1000);
+                this.packetReceiver.removeExpired();
+            }
+        }, "Expired Packet Handler");
     }
 
     public void connect() {

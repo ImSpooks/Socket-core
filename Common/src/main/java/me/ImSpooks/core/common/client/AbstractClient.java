@@ -7,7 +7,6 @@ import me.ImSpooks.core.common.exceptions.SocketDisconnectedException;
 import me.ImSpooks.core.common.interfaces.IClient;
 import me.ImSpooks.core.helpers.JavaHelpers;
 import me.ImSpooks.core.packets.init.Packet;
-import me.ImSpooks.core.packets.init.channels.WrappedOutputStream;
 import org.tinylog.Logger;
 
 import java.io.DataInputStream;
@@ -37,7 +36,7 @@ public abstract class AbstractClient implements IClient {
                 return;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.error(e);
         }
 
 
@@ -74,14 +73,14 @@ public abstract class AbstractClient implements IClient {
     @Override
     public void write(Packet packet) {
         try {
-            byte[] serialized = packet.serialize(new WrappedOutputStream());
+            byte[] serialized = packet.serialize();
             this.out.writeInt(serialized.length);
             this.out.write(serialized);
 
             // Sleaping 10 milisecond to prevent data from being sent too fast that can cause corruption
             JavaHelpers.sleep(10);
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.error(e);
         }
     }
 
@@ -91,7 +90,7 @@ public abstract class AbstractClient implements IClient {
             started = false;
             this.socket.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.error(e);
         }
     }
 

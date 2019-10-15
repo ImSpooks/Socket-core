@@ -1,6 +1,5 @@
 package me.ImSpooks.core.server.connection;
 
-import me.ImSpooks.core.common.client.AbstractClient;
 import me.ImSpooks.core.helpers.JavaHelpers;
 
 import java.util.*;
@@ -12,12 +11,12 @@ import java.util.*;
 public class ConnectionMaps {
 
     public static final Set<String> blockedHosts = Collections.synchronizedSet(new HashSet<>());
-    public static final Map<AbstractClient, Integer> connectionAttempts = new HashMap<>();
+    public static final Map<Long, Integer> connectionAttempts = new HashMap<>();
 
     static {
         new Thread(() -> {
             while (true) {
-                JavaHelpers.sleep(1000 * 60);
+                JavaHelpers.sleep(1000 * 60 * 5);
                 blockedHosts.clear();
                 connectionAttempts.clear();
             }

@@ -12,7 +12,6 @@ import java.util.List;
 
 /**
  * Created by Nick on 30 Sep 2019.
- * No part of this publication may be reproduced, distributed, or transmitted in any form or by any means.
  * Copyright © ImSpooks
  */
 public class WrappedInputStream {
@@ -29,6 +28,14 @@ public class WrappedInputStream {
 		if (increment)
 			index++;
 		return value;
+	}
+
+	public void skip() {
+		this.skip(1);
+	}
+
+	public void skip(int amount) {
+		this.index += amount;
 	}
 
 	public <T> T read(Class<T> clazz) throws IOException {
@@ -139,13 +146,14 @@ public class WrappedInputStream {
 				return this.readBoolean();
 			case 6:
 				return this.in.get(index++);
-			case 7:
+			case 7: {
 				int size = this.readInt();
 				List<Object> list = new ArrayList<>(size);
 				for (int i = 0; i < size; i++) {
 					list.add(this.readTypePrefixed());
 				}
 				return list;
+			}
 			case 8:
 				return Global.GSON.fromJson(this.readString(), LinkedHashMap.class);
 			case 9:

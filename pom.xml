@@ -14,6 +14,7 @@
         <module>JavaClient</module>
         <module>Packets</module>
         <module>Resources</module>
+        <module>ClientBridge</module>
     </modules>
 
 

@@ -5,6 +5,7 @@ import me.ImSpooks.core.common.client.AbstractClient;
 import me.ImSpooks.core.common.exceptions.SocketDisconnectedException;
 import me.ImSpooks.core.packets.init.Packet;
 import me.ImSpooks.core.server.CoreServer;
+import org.tinylog.Logger;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
@@ -14,7 +15,6 @@ import java.net.Socket;
 
 /**
  * Created by Nick on 27 sep. 2019.
- * No part of this publication may be reproduced, distributed, or transmitted in any form or by any means.
  * Copyright © ImSpooks
  */
 public class ServerClient extends AbstractClient {
@@ -44,7 +44,7 @@ public class ServerClient extends AbstractClient {
             this.in = new DataInputStream(new BufferedInputStream(this.socket.getInputStream()));
             this.out = new DataOutputStream(this.socket.getOutputStream());
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.error(e);
         }
     }
 

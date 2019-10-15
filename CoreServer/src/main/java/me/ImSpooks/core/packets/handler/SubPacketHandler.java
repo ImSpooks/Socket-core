@@ -12,7 +12,6 @@ import java.util.Map;
 
 /**
  * Created by Nick on 01 okt. 2019.
- * No part of this publication may be reproduced, distributed, or transmitted in any form or by any means.
  * Copyright © ImSpooks
  */
 public class SubPacketHandler {
@@ -29,12 +28,14 @@ public class SubPacketHandler {
                 continue;
 
             for (Class<? extends Packet> packet : PacketRegister.getPackets()) {
-                if (method.getParameterTypes()[0] == Packet.class)
-                    continue;
+                if (method.isAnnotationPresent(PacketHandling.class)) {
+                    if (method.getParameterTypes()[0] == Packet.class)
+                        continue;
 
-                if (method.getParameterTypes()[0] == packet) {
-                    method.setAccessible(true);
-                    METHODS.put(packet, method);
+                    if (method.getParameterTypes()[0] == packet) {
+                        method.setAccessible(true);
+                        METHODS.put(packet, method);
+                    }
                 }
             }
         }
@@ -50,7 +51,6 @@ public class SubPacketHandler {
             METHODS.get(packet.getClass()).invoke(this, packet, client);
             return true;
         } catch (IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
             // Method not found
             Logger.error(e, "There was en error thrown while invoking handling method for packet \'{}\'", packet.getClass().getName());
             return false;

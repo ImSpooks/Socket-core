@@ -3,6 +3,7 @@ package me.ImSpooks.core.packets.init;
 import me.ImSpooks.core.packets.collection.database.*;
 import me.ImSpooks.core.packets.collection.network.PacketConfirmConnection;
 import me.ImSpooks.core.packets.collection.network.PacketRequestConnection;
+import me.ImSpooks.core.packets.collection.other.PacketResponseExpired;
 import me.ImSpooks.core.packets.type.PacketType;
 
 import java.lang.reflect.Constructor;
@@ -14,7 +15,6 @@ import java.util.Map;
 
 /**
  * Created by Nick on 01 okt. 2019.
- * No part of this publication may be reproduced, distributed, or transmitted in any form or by any means.
  * Copyright © ImSpooks
  */
 public class PacketRegister {
@@ -28,6 +28,7 @@ public class PacketRegister {
         // networking
         register(1, PacketRequestConnection.class, PacketType.NETWORK);
         register(2, PacketConfirmConnection.class, PacketType.NETWORK);
+        register(3, PacketResponseExpired.class, PacketType.NETWORK);
 
         // database=
         register(1, PacketRequestData.class, PacketType.DATABASE);
@@ -48,6 +49,9 @@ public class PacketRegister {
         if (REGISTERED_IDS.containsKey(packet)) {
             throw new IllegalArgumentException("Packet " + packet + " already registered");
         }
+        if (REGISTERED_PACKETS.size() > MAX_PACKETS) {
+            throw new IllegalArgumentException(String.format("Cannot register packet \'%s\': The maximum packet limit (%s) has been reached", packet.getSimpleName(), MAX_PACKETS));
+        }
 
         REGISTERED_PACKETS.put(id, packet);
         REGISTERED_IDS.put(packet, id);
@@ -55,7 +59,7 @@ public class PacketRegister {
     }
 
     public static Packet createInstance(int id) {
-        if (id < 0 || id > MAX_PACKETS && !String.valueOf(id).startsWith("-"))
+        if (id < 0 || id > MAX_PACKETS)
             throw new IllegalArgumentException("Illegal id range " + id);
 
         try {
@@ -71,7 +75,7 @@ public class PacketRegister {
         }
     }
 
-    public static short getId(Packet packet) {
+    public static int getId(Packet packet) {
         if (packet == null)
             throw new IllegalArgumentException("Packet may not be null");
 
@@ -81,14 +85,14 @@ public class PacketRegister {
         if (id < 0 || id > MAX_PACKETS)
             throw new AssertionError("Packet id had impossible value " + id);
 
-        return (short) ((int) id);
+        return id;
     }
 
     public static PacketType getPacketType(int id) {
         if (id < 0 || id > MAX_PACKETS && !String.valueOf(id).startsWith("-"))
             throw new IllegalArgumentException("Illegal id range " + id);
         if (!PACKET_TYPES.containsKey(id))
-            throw new IllegalArgumentException("Invalid packit id " + id);
+            throw new IllegalArgumentException("Invalid packet id " + id);
         return PACKET_TYPES.get(id);
     }
 
@@ -96,9 +100,18 @@ public class PacketRegister {
         if (id < 0 || id > MAX_PACKETS && !String.valueOf(id).startsWith("-"))
             throw new IllegalArgumentException("Illegal id range " + id);
         if (!REGISTERED_PACKETS.containsKey(id))
-            throw new IllegalArgumentException("Invalid packit id " + id);
+            throw new IllegalArgumentException("Invalid packet id " + id);
 
         return REGISTERED_PACKETS.get(id).getSimpleName();
+    }
+
+    public static Class<? extends Packet> getPacketFromClassName(String className) throws ClassNotFoundException {
+        for (Class<? extends Packet> packet : getPackets()) {
+            if (packet.getSimpleName().equalsIgnoreCase(className)) {
+                return packet;
+            }
+        }
+        throw new ClassNotFoundException("No registered packets with name \'" + className + "\' found");
     }
 
     public static List<Class<? extends Packet>> getPackets() {
