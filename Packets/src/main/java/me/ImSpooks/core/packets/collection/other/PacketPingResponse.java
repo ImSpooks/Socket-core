@@ -20,7 +20,7 @@ public class PacketPingResponse extends Packet {
 
     public PacketPingResponse(long serverTime, long clientTime) {
         this.serverTime = serverTime;
-        this.estimatedTime = serverTime - clientTime;
+        this.estimatedTime = serverTime - clientTime + 1;
     }
 
     public PacketPingResponse() {

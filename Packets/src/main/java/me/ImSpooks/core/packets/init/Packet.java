@@ -34,7 +34,7 @@ public abstract class Packet {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T extends Packet> T deserialize(String input) throws JsonParseException {
+    public static <T extends Packet> T deserialize(String input) throws Exception {
         int packetId = -1;
         try {
             input = input.trim();
@@ -55,13 +55,14 @@ public abstract class Packet {
             throw new JsonParseException(e);
         } catch (JsonSyntaxException e) {
             Logger.error(e, "Deserializing json went wrong for packet {} with input \'{}\'", packetId != -1 ? PacketRegister.getPacketName(packetId) : "\"unknown\"", input);
+            throw e;
         } catch (Exception e) {
             Logger.error(e, "Something went wrong while deserializing packet {} with input \'{}\'", packetId != -1 ? PacketRegister.getPacketName(packetId) : "\"unknown\"", input);
+            throw new Exception(e);
         }
-        return null;
     }
 
-    public static <T extends Packet> T deserialize(byte[] input) throws IOException {
+    public static <T extends Packet> T deserialize(byte[] input) throws Exception {
         return deserialize(new String(input));
     }
 

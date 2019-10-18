@@ -34,11 +34,12 @@ public class ClientBridge extends AbstractClient {
         this.socket = socket;
     }
 
+    StringBuilder tmp = new StringBuilder();
     @Override
     public void handleClient() {
         try {
             if (this.in.available() == 0) {
-                JavaHelpers.sleep(50);
+                JavaHelpers.sleep(1);
                 return;
             }
         } catch (IOException e) {
@@ -59,7 +60,25 @@ public class ClientBridge extends AbstractClient {
                 else break;
             }
 
-            int length = Integer.parseInt(stringLength.toString());
+            int length;
+
+            try {
+                length = Integer.parseInt(stringLength.toString());
+            } catch (NumberFormatException e) {
+                // throws this exception if previous data was corrupted
+                // instead of parsing it will add the corrupted temp string to the current one
+
+                String s = stringLength.toString().trim();
+                s = tmp.toString() + s;
+                if (s.startsWith("[") && !s.endsWith("]")) {
+                    tmp.append(stringLength.toString());
+                    Logger.debug("s = {}", s);
+                    return;
+                }
+                tmp = new StringBuilder();
+                this.handleCommand(s.trim());
+                return;
+            }
 
             byte[] buffer = new byte[length > 0 ? length : 128];
             in.read(buffer);
@@ -79,11 +98,27 @@ public class ClientBridge extends AbstractClient {
                 for (String s : split) {
                     if (s == null || s.isEmpty())
                         continue;
+                    s = s.trim();
 
+                    s = tmp.toString() + s;
+                    if (s.startsWith("[") && !s.endsWith("]")) {
+                        // add corrupted data to tmp string
+                        tmp.append(s.trim());
+                        continue;
+                    }
+                    tmp = new StringBuilder();
                     this.handleCommand(s.trim());
+
                 }
                 return;
             }
+            if (decoded.startsWith("[") && !decoded.endsWith("]")) {
+                tmp.append(decoded.trim());
+                // add corrupted data to tmp string
+                return;
+            }
+            tmp = new StringBuilder();
+
             this.handleCommand(decoded);
 
 
@@ -92,34 +127,36 @@ public class ClientBridge extends AbstractClient {
         }
     }
 
+
     private void handleCommand(String input) throws IOException {
+        if (input.contains("|")) {
+            CommandHandler handler = new CommandHandler(input);
+            if (handler.handleCommand()) {
+
+            }
+            return;
+        }
         try {
             Packet packet = Packet.deserialize(input);
-            if (packet != null) {
-                try {
-                    Class<? extends Packet> response = PacketRegister.getPacketFromClassName(packet.getClass().getSimpleName() + "Response");
-                    this.coreServer.getJavaClient().sendAndReadPacket(packet, response, new IncomingPacket<Packet>(10 * 1000) {
-                        @Override
-                        public boolean onReceive(Packet packet) {
-                            write(packet);
-                            return true;
-                        }
+            try {
+                Class<? extends Packet> response = PacketRegister.getPacketFromClassName(packet.getClass().getSimpleName() + "Response");
+                this.coreServer.getJavaClient().sendAndReadPacket(packet, response, new IncomingPacket<Packet>(10 * 1000) {
+                    @Override
+                    public boolean onReceive(Packet packet) {
+                        write(packet);
+                        return true;
+                    }
 
-                        @Override
-                        public void onExpire() {
-                            write(new PacketResponseExpired(this.getExpireAfter()));
-                        }
-                    });
-                } catch (ClassNotFoundException e) {
-                    this.coreServer.getJavaClient().sendPacket(packet);
-                }
+                    @Override
+                    public void onExpire() {
+                        write(new PacketResponseExpired(this.getExpireAfter()));
+                    }
+                });
+            } catch (ClassNotFoundException e) {
+                this.coreServer.getJavaClient().sendPacket(packet);
             }
         } catch (JsonParseException e) {
-            CommandHandler handler = new CommandHandler(input);
-
-            if (handler.handleCommand()) { // return output
-                this.out.write(handler.getOutput().getBytes());
-            }
+            this.write(new PacketResponseExpired(-1));
         } catch (Exception e) {
             Logger.error("Received corrupted data: " + input);
         }
@@ -156,8 +193,8 @@ public class ClientBridge extends AbstractClient {
             this.out.write(String.valueOf(serialized.length).getBytes());
             this.out.write(serialized);
 
-            // Sleaping 10 milisecond to prevent data from being sent too fast that can cause corruption
-            JavaHelpers.sleep(10);
+            // Sleaping 5 millisecond to prevent data from being sent too fast that can cause corruption
+            //JavaHelpers.sleep(5);
         } catch (IOException e) {
             Logger.error(e);
         }

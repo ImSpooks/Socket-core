@@ -7,6 +7,7 @@
 namespace client;
 
 use client\handler\Client;
+use client\packets\collection\other\PacketResponseExpired;
 use client\packets\init\Packet;
 use client\packets\init\PacketRegister;
 
@@ -23,10 +24,19 @@ class PhpClient {
         $this->client->write($packet);
     }
 
-    public function sendAndReadPacket(Packet $packet, $function) {
+    public function sendAndReadPacket(Packet $packet, $function, $expire) {
         $this->sendPacket($packet);
+        $response = $this->client->read();
 
-        $function(Packet::deserialize($this->client->read()));
+        if ($response != null && !empty($response)) {
+            $packet = Packet::deserialize($response);
+
+            if ($response != null && !empty($response) && !($packet instanceof PacketResponseExpired))
+                $function($packet);
+            else if ($expire != null) {
+                $expire($packet);
+            }
+        }
     }
 
     public static function requireAll($dir) {

@@ -19,6 +19,8 @@ $client = new PhpClient(SERVER_IP, SERVER_PORT);
 
 $client->sendAndReadPacket(new PacketRequestCollection("test_table"), function (PacketRequestCollectionResponse $packet) {
     echo json_encode($packet->getDocuments()) . "\n";
+}, function ($expired) {
+
 });
 
 //$client->sendAndReadPacket(new PacketRequestCollection("test_table"), function (PacketRequestCollectionResponse $packet) {

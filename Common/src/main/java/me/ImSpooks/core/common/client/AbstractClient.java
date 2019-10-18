@@ -32,7 +32,7 @@ public abstract class AbstractClient implements IClient {
     public void handleClient() {
         try {
             if (this.in.available() == 0) {
-                JavaHelpers.sleep(50);
+                JavaHelpers.sleep(1);
                 return;
             }
         } catch (IOException e) {
@@ -67,6 +67,8 @@ public abstract class AbstractClient implements IClient {
             this.handlePacket(Packet.deserialize(decoded));
         } catch (IOException e) {
             Logger.error(e);
+        } catch (Exception e) {
+            Logger.error(e);
         }
     }
 
@@ -77,8 +79,8 @@ public abstract class AbstractClient implements IClient {
             this.out.writeInt(serialized.length);
             this.out.write(serialized);
 
-            // Sleaping 10 milisecond to prevent data from being sent too fast that can cause corruption
-            JavaHelpers.sleep(10);
+            // Sleaping 5 millisecond to prevent data from being sent too fast that can cause corruption
+            //JavaHelpers.sleep(5);
         } catch (IOException e) {
             Logger.error(e);
         }

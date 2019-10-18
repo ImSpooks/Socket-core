@@ -15,6 +15,7 @@ class Client {
 
     public function __construct(string $ip, int $port) {
         $this->socket = socket_create(AF_INET, SOCK_STREAM, 0);
+        socket_set_option($this->socket,SOL_SOCKET, SO_RCVTIMEO, array("sec" => 10, "usec" => 0));
         socket_connect($this->socket, $ip, $port);
     }
 
@@ -34,5 +35,6 @@ class Client {
                 return $response;
             }
         }
+        return "";
     }
 }

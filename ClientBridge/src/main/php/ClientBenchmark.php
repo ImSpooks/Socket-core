@@ -19,7 +19,7 @@ $total = [];
 
 $now = TimeUtils::currentTimeMillis();
 
-for ($i = 0; $i < 10000; $i++) {
+for ($i = 0; $i < 100000; $i++) {
     $client->sendAndReadPacket(new PacketPing(TimeUtils::currentTimeMillis()), function (PacketPingResponse $packet) {
         global $clientserver;
         global $serverclient;
@@ -34,8 +34,10 @@ for ($i = 0; $i < 10000; $i++) {
         array_push($serverclient, ($currentTime - $packet->getServerTime()));
         array_push($total, ($packet->getEstimatedTime() + $currentTime - $packet->getServerTime()));
 
-        if (count($clientserver) % 100 == 0)
+        if (count($clientserver) % 1000 == 0)
             echo sprintf("%s packets send\n", count($clientserver));
+    }, function ($expired) {
+        echo "Packet expired.\n";
     });
 }
 
@@ -57,10 +59,10 @@ foreach ($total as $ms) {
 }
 $totalAvg /= count($total);
 
-echo sprintf("Total packets send: %s packets (Took %s ms, %s packets p/s)\n", count($clientserver), TimeUtils::currentTimeMillis() - $now, count($clientserver) / ((TimeUtils::currentTimeMillis() - $now) / 1000));
-echo sprintf("Client to Server average: %s ms\n", $clientserverAvg);
-echo sprintf("Server to Client average: %s ms\n", $serverclientAvg);
-echo sprintf("Total response time average: %s ms\n", $totalAvg);
+echo sprintf("Total packets send: %s packets (Took %s s, %s packets p/s)\n", count($clientserver), round((TimeUtils::currentTimeMillis() - $now) / 1000, 3), round(count($clientserver) / ((TimeUtils::currentTimeMillis() - $now) / 1000), 3));
+echo sprintf("Client to Server average: %s ms\n", round($clientserverAvg, 2));
+echo sprintf("Server to Client average: %s ms\n", round($serverclientAvg, 2));
+echo sprintf("Total response time average: %s ms\n", round($totalAvg, 2));
 
 //$client->sendAndReadPacket(new PacketRequestCollection("test_table"), function (PacketRequestCollectionResponse $packet) {
 //    var_dump($packet);
