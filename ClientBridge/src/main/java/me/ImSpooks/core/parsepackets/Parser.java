@@ -4,7 +4,6 @@ import lombok.Getter;
 import me.ImSpooks.core.helpers.AtomicObject;
 import me.ImSpooks.core.helpers.StringHelpers;
 import me.ImSpooks.core.packets.init.Packet;
-import org.tinylog.Logger;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -22,16 +21,16 @@ import java.util.*;
  */
 public class Parser {
 
-    private static final int PHP_VERSION = 74;
+    private static final int PHP_VERSION = 73;
 
     private final Class<? extends Packet> aClass;
-    private int tabs = 0;
+    private final String namespace;
     @Getter private final File file;
 
     @Getter private String output;
 
 
-    public Parser(Class<? extends Packet> aClass, String pathToClass, int tabs) {
+    public Parser(Class<? extends Packet> aClass, String pathToClass, String namespace) {
         this.file = new File(pathToClass.replace("/", File.separator));
         if (!file.exists())
             throw new NullPointerException("Given class doesnt has a valid reference file.");
@@ -39,7 +38,7 @@ public class Parser {
 //            Logger.debug("Reference file for packet " + aClass.getSimpleName() + " has been found.");
 
         this.aClass = aClass;
-        this.tabs = tabs;
+        this.namespace = namespace.replace(".", "\\").replace("/", "\\");
         this.output = output();
     }
 
@@ -49,21 +48,26 @@ public class Parser {
 
 
         a(builder, "<?php");
-        c(builder);
-        StringBuilder prefix = new StringBuilder();
-        for (int i = 0; i < tabs; i++)
-            prefix.append("../");
-        a(builder, String.format("require_once \"%s\";", prefix.toString() + "init/Packet.php"));
-        a(builder, String.format("require_once \"%s\";", prefix.toString() + "init/channels/WrappedInputStream.php"));
-        a(builder, String.format("require_once \"%s\";", prefix.toString() + "init/channels/WrappedOutputStream.php"));
-        c(builder);
+//        c(builder);
+//        StringBuilder prefix = new StringBuilder();
+//        for (int i = 0; i < tabs; i++)
+//            prefix.append("../");
+//        a(builder, String.format("require_once \"%s\";", prefix.toString() + "init/Packet.php"));
+//        a(builder, String.format("require_once \"%s\";", prefix.toString() + "init/channels/WrappedInputStream.php"));
+//        a(builder, String.format("require_once \"%s\";", prefix.toString() + "init/channels/WrappedOutputStream.php"));
+//        c(builder);
 
         a(builder, "/**");
         a(builder, String.format(" * Created by Nick on %s.", new SimpleDateFormat("dd MMM yyyy").format(new Date())));
         a(builder, " * Copyright © ImSpooks");
         a(builder, " */");
         c(builder);
-
+        a(builder, String.format("namespace %s;", namespace));
+        c(builder);
+        a(builder, String.format("use %s;", "client/packets/init/Packet".replace("/", "\\")));
+        a(builder, String.format("use %s;", "client/packets/init/channels/WrappedInputStream".replace("/", "\\")));
+        a(builder, String.format("use %s;", "client/packets/init/channels/WrappedOutputStream".replace("/", "\\")));
+        c(builder);
         a(builder, String.format("class %s extends Packet {", aClass.getSimpleName()));
         c(builder);
 
@@ -189,11 +193,11 @@ public class Parser {
                                     firstBracket = true;
                                 else {
                                     closers++;
-                                    Logger.debug("Opener found in {} on line {} in class {}", method.getName(), index, aClass.getName());
+                                    //Logger.debug("Opener found in {} on line {} in class {}", method.getName(), index, aClass.getName());
                                 }
                             }
                             if (word.contains("}")) {
-                                Logger.debug("Closer found in {} on line {} in class {}", method.getName(), index, aClass.getName());
+                                //Logger.debug("Closer found in {} on line {} in class {}", method.getName(), index, aClass.getName());
                                 closers--;
                             }
 
@@ -236,7 +240,6 @@ public class Parser {
 
                             }));
 
-                            System.out.println("line.get() = " + line.get());
                             a(builder, line.get());
                         });
 

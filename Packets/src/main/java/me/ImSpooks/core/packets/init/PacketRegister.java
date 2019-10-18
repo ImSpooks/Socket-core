@@ -3,6 +3,8 @@ package me.ImSpooks.core.packets.init;
 import me.ImSpooks.core.packets.collection.database.*;
 import me.ImSpooks.core.packets.collection.network.PacketConfirmConnection;
 import me.ImSpooks.core.packets.collection.network.PacketRequestConnection;
+import me.ImSpooks.core.packets.collection.other.PacketPing;
+import me.ImSpooks.core.packets.collection.other.PacketPingResponse;
 import me.ImSpooks.core.packets.collection.other.PacketResponseExpired;
 import me.ImSpooks.core.packets.type.PacketType;
 
@@ -38,6 +40,8 @@ public class PacketRegister {
         register(5, PacketUpdateData.class, PacketType.DATABASE);
 
         //other
+        register(1, PacketPing.class, PacketType.OTHER);
+        register(2, PacketPingResponse.class, PacketType.OTHER);
     }
 
     private static void register(int id, Class<? extends Packet> packet, PacketType packetType) {

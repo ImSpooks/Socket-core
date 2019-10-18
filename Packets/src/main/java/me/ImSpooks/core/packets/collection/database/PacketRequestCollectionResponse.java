@@ -2,6 +2,7 @@ package me.ImSpooks.core.packets.collection.database;
 
 import lombok.Getter;
 import me.ImSpooks.core.helpers.Global;
+import me.ImSpooks.core.packets.collection.GlobalPacket;
 import me.ImSpooks.core.packets.init.Packet;
 import me.ImSpooks.core.packets.init.channels.WrappedInputStream;
 import me.ImSpooks.core.packets.init.channels.WrappedOutputStream;
@@ -16,6 +17,7 @@ import java.util.List;
  * Copyright © ImSpooks
  */
 @SuppressWarnings("unchecked")
+@GlobalPacket
 public class PacketRequestCollectionResponse extends Packet {
 
     @Getter private ArrayList<Document> documents;

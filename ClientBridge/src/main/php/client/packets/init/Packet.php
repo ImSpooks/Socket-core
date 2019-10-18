@@ -4,6 +4,14 @@
  * Copyright © ImSpooks
  */
 
+namespace client\packets\init;
+
+use client\packets\init\channels\WrappedInputStream;
+use client\packets\init\channels\WrappedOutputStream;
+use Exception;
+use ReflectionException;
+use StringUtils;
+
 abstract class Packet {
 
     public function serialize(): string {
@@ -13,7 +21,7 @@ abstract class Packet {
         $out->writeInt($this->getId());
         $this->send($out);
 
-        return pack(json_encode($out));
+        return json_encode($out->getOut());
     }
 
     public static function deserialize(string $input): Packet {
@@ -45,13 +53,9 @@ abstract class Packet {
     private $id = -1;
     public function getId(): int {
         if ($this->id == -1) {
-            $this->id = PacketRegister::getId($this);
+            $this->id = PacketRegister::getId(get_class($this));
         }
         return $this->id;
-    }
-
-    public static function getClassName(): string {
-        return get_class();
     }
 
     public function __toString(): string {

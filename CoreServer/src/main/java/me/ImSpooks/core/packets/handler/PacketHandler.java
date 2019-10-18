@@ -5,6 +5,7 @@ import me.ImSpooks.core.common.client.AbstractClient;
 import me.ImSpooks.core.packets.collection.network.PacketRequestConnection;
 import me.ImSpooks.core.packets.handler.handlers.DatabasePacketHandler;
 import me.ImSpooks.core.packets.handler.handlers.NetworkPacketHandler;
+import me.ImSpooks.core.packets.handler.handlers.OtherPacketHandler;
 import me.ImSpooks.core.packets.init.Packet;
 import me.ImSpooks.core.packets.type.PacketType;
 import me.ImSpooks.core.server.CoreServer;
@@ -30,6 +31,7 @@ public class PacketHandler {
         this.password = password;
         this.packetHandlers.put(PacketType.NETWORK, new NetworkPacketHandler(this));
         this.packetHandlers.put(PacketType.DATABASE, new DatabasePacketHandler(this));
+        this.packetHandlers.put(PacketType.OTHER, new OtherPacketHandler(this));
     }
 
     public void handlePacket(Packet packet, AbstractClient client) {

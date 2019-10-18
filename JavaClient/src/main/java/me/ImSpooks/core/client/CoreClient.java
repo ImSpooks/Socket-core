@@ -54,6 +54,6 @@ public class CoreClient {
 
     public void sendAndReadPacket(Packet packet, Class<? extends Packet> responseClass, IncomingPacket<? extends Packet> response) {
         this.packetReceiver.addListener(responseClass, response);
-        this.client.write(packet);
+        this.sendPacket(packet);
     }
 }

@@ -10,10 +10,14 @@ import me.ImSpooks.core.client.CoreClient;
  */
 public class Bridge {
 
+    @Getter private final int bridgePort;
     @Getter private final CoreClient javaClient;
     @Getter private ClientBridgeServer server;
 
-    public Bridge(CoreClient javaClient) {
+    public Bridge(int bridgePort, CoreClient javaClient) {
+        this.bridgePort = bridgePort;
+        this.server = new ClientBridgeServer(this.bridgePort, this);
+
         this.javaClient = javaClient;
 
         this.javaClient.connect();

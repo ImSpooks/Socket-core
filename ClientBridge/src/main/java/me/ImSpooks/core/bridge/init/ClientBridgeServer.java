@@ -42,7 +42,6 @@ public class ClientBridgeServer implements IServer {
             Logger.error(e);
         }
 
-
         new Thread(this::handleClients, "Client handler").start();
         new Thread(this::handleServer, "Server handler").start();
     }
@@ -90,7 +89,7 @@ public class ClientBridgeServer implements IServer {
 
                 ClientBridge client = new ClientBridge(socket, this.coreServer);
                 client.connect();
-                Logger.info("Client \'{}\' on ip \'{}\' connected");
+                Logger.info("Client on ip \'{}\' connected", client.getSocket().getInetAddress().getHostAddress());
 
                 this.clients.add(client);
             } catch (IOException e) {

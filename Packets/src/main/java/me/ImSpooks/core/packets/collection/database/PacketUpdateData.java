@@ -1,6 +1,7 @@
 package me.ImSpooks.core.packets.collection.database;
 
 import lombok.Getter;
+import me.ImSpooks.core.packets.collection.GlobalPacket;
 import me.ImSpooks.core.packets.init.Packet;
 import me.ImSpooks.core.packets.init.channels.WrappedInputStream;
 import me.ImSpooks.core.packets.init.channels.WrappedOutputStream;
@@ -12,6 +13,7 @@ import java.io.IOException;
  * Copyright © ImSpooks
  */
 @Getter
+@GlobalPacket
 public class PacketUpdateData extends Packet {
 
     private String collection;

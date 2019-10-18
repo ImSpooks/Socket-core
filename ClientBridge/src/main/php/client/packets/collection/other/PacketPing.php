@@ -10,20 +10,24 @@ use client\packets\init\Packet;
 use client\packets\init\channels\WrappedInputStream;
 use client\packets\init\channels\WrappedOutputStream;
 
-class PacketResponseExpired extends Packet {
+class PacketPing extends Packet {
 
-    /** @var int */ 	private $ms;
+    /** @var int */ 	private $clientTime;
 
-    public function __construct(int $ms = 0) {
-        $this->ms = $ms;
+    public function __construct(int $clientTime = 0) {
+        $this->clientTime = $clientTime;
     }
 
     public function send(WrappedOutputStream $out) {
-        $out->writeLong($this->ms);
+        $out->writeLong($this->clientTime);
     }
 
     public function receive(WrappedInputStream $in) {
-        $this->ms = $in->readLong();
+        $this->clientTime = $in->readLong();
+    }
+
+    public function getClientTime(): int {
+        return $this->clientTime;
     }
 
 }

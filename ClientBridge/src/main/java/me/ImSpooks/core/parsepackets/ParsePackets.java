@@ -1,5 +1,6 @@
 package me.ImSpooks.core.parsepackets;
 
+import me.ImSpooks.core.packets.collection.GlobalPacket;
 import org.tinylog.Logger;
 
 import java.io.BufferedOutputStream;
@@ -23,14 +24,17 @@ public class ParsePackets {
         try {
             String where = "me.ImSpooks.core.packets.";
             List<Class> classes = this.getClasses(where + "collection");
-            classes.removeAll(this.getClasses(where + "collection.network"));
+            //classes.removeAll(this.getClasses(where + "collection.network"));
 
             String from = (System.getProperty("user.dir") + "/Packets/src/main/java/").replace(File.separator, "/");
-            String to = (System.getProperty("user.dir") + "/PhpClient/src/main/php/client").replace(File.separator, "/");
+            String to = (System.getProperty("user.dir") + "/ClientBridge/src/main/php/client").replace(File.separator, "/");
 
             Map<String, String> parsed = new HashMap<>();
             for (Class aClass : classes) {
-                String output = new Parser(aClass, from + aClass.getName().replace(".", "/") + ".java", aClass.getPackage().getName().replace(where, "").split("\\.").length).getOutput();
+                if (aClass.getAnnotation(GlobalPacket.class) == null)
+                    continue;
+
+                String output = new Parser(aClass, from + aClass.getName().replace(".", "/") + ".java", "client.packets." + aClass.getPackage().getName().replace(where, "")).getOutput();
                 //Logger.debug("aClass.getPackage().getName() = " + aClass.getPackage().getName());
                 //Logger.debug("output = " + output);
                 parsed.put(to + (".packets." + aClass.getName().replace(where, "")).replace(".", "/") + ".php", output);
@@ -44,7 +48,7 @@ public class ParsePackets {
 
                 File parent = new File(dir);
                 if (!parent.exists()) {
-                    Logger.info("Creating new folder...");
+                    Logger.info("Creating new folder... " + dir);
                     if (parent.mkdirs()) {
                         Logger.info("Created new folder.");
                     }
@@ -54,7 +58,7 @@ public class ParsePackets {
 
                 if (!file.exists()) {
                     try {
-                        Logger.info("Creating new file...");
+                        Logger.info("Creating new file... " + fileName);
                         if (file.createNewFile()); {
                             Logger.info("Created new file.");
                         }

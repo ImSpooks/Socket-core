@@ -14,7 +14,7 @@ public class Start {
 
     public static void main(String[] args) {
         {
-            JSONConfig clientDetails = new JSONConfig("config", "client.json");
+            JSONConfig clientDetails = new JSONConfig("config", "credentials.json");
 
             clientDetails.expect("bridge_port", 7001);
 
@@ -34,7 +34,7 @@ public class Start {
                 Logger.error(e);
             }
 
-            new Bridge(new CoreClient(
+            new Bridge(clientDetails.getInt("bridge_port"), new CoreClient(
                     clientDetails.getString("server_ip"),
                     clientDetails.getInt("server_port"),
                     clientDetails.getString("password"),

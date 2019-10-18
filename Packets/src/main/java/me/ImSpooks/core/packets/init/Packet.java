@@ -34,7 +34,7 @@ public abstract class Packet {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T extends Packet> T deserialize(String input) throws IOException {
+    public static <T extends Packet> T deserialize(String input) throws JsonParseException {
         int packetId = -1;
         try {
             input = input.trim();

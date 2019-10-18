@@ -1,47 +1,46 @@
 <?php
+
+namespace client\packets\init\channels;
+
 /**
  * Created by Nick on 14 okt. 2019.
  * Copyright © ImSpooks
  */
-
 class WrappedOutputStream {
+    // TODO convert to 7.4 if released
 
-   private array $out;
-
-    public function __construct() {
-        $this->out = [];
-    }
+    /** @var array */ private $out = [];
 
     public function write($bytes) {
-        array_push($out, $bytes);
+        array_push($this->out, $bytes);
     }
 
     public function writeBoolean(bool $b) {
-        array_push($out, $b);
+        array_push($this->out, $b);
     }
 
     public function writeDouble(float $d) {
-        array_push($out, $d);
+        array_push($this->out, $d);
     }
 
     public function writeFloat(float $f) {
-        array_push($out, $f);
+        array_push($this->out, $f);
     }
 
     public function writeInt(int $i) {
-        array_push($out, $i);
+        array_push($this->out, $i);
     }
 
     public function writeLong(int $l) {
-        array_push($out, $l);
+        array_push($this->out, $l);
     }
 
     public function writeShort(int $s) {
-        array_push($out, $s);
+        array_push($this->out, $s);
     }
 
     public function writeString(String $s) {
-        array_push($out, $s);
+        array_push($this->out, $s);
     }
 
     public function writeTypePrefixed(object $o) {

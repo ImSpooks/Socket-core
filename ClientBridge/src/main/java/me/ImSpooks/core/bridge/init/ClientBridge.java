@@ -1,6 +1,7 @@
 package me.ImSpooks.core.bridge.init;
 
 import com.google.common.base.Ascii;
+import com.google.gson.JsonParseException;
 import lombok.Getter;
 import me.ImSpooks.core.bridge.Bridge;
 import me.ImSpooks.core.common.client.AbstractClient;
@@ -47,10 +48,22 @@ public class ClientBridge extends AbstractClient {
 
 
         try {
-            int length = in.readInt();
+            StringBuilder stringLength = new StringBuilder();
+            String current = "";
+            while (true) {
+                byte[] buffer = new byte[1];
+                in.read(buffer);
+                current = new String(buffer);
+                if (!current.equalsIgnoreCase("\n"))
+                    stringLength.append(current);
+                else break;
+            }
+
+            int length = Integer.parseInt(stringLength.toString());
+
             byte[] buffer = new byte[length > 0 ? length : 128];
             in.read(buffer);
-            String decoded = new String(buffer);
+            String decoded = new String(buffer).trim();
 
             // Got corrupted data, splitting each packet with Form Feed
             for (byte splitter : new byte[] {Ascii.FF, Ascii.DC2}) {
@@ -64,11 +77,14 @@ public class ClientBridge extends AbstractClient {
                 String[] split = decoded.split("\n");
 
                 for (String s : split) {
-                    this.handleCommand(new CommandHandler(s.trim()));
+                    if (s == null || s.isEmpty())
+                        continue;
+
+                    this.handleCommand(s.trim());
                 }
                 return;
             }
-            this.handleCommand(new CommandHandler(decoded.trim()));
+            this.handleCommand(decoded);
 
 
         } catch (IOException e) {
@@ -76,9 +92,9 @@ public class ClientBridge extends AbstractClient {
         }
     }
 
-    private void handleCommand(CommandHandler handler) {
-        if (handler.handleCommand()) { // return output
-            Packet packet = handler.getPacket();
+    private void handleCommand(String input) throws IOException {
+        try {
+            Packet packet = Packet.deserialize(input);
             if (packet != null) {
                 try {
                     Class<? extends Packet> response = PacketRegister.getPacketFromClassName(packet.getClass().getSimpleName() + "Response");
@@ -95,9 +111,17 @@ public class ClientBridge extends AbstractClient {
                         }
                     });
                 } catch (ClassNotFoundException e) {
-                    this.coreServer.getJavaClient().sendPacket(handler.getPacket());
+                    this.coreServer.getJavaClient().sendPacket(packet);
                 }
             }
+        } catch (JsonParseException e) {
+            CommandHandler handler = new CommandHandler(input);
+
+            if (handler.handleCommand()) { // return output
+                this.out.write(handler.getOutput().getBytes());
+            }
+        } catch (Exception e) {
+            Logger.error("Received corrupted data: " + input);
         }
     }
 
@@ -127,6 +151,15 @@ public class ClientBridge extends AbstractClient {
 
     @Override
     public void write(Packet packet) {
-        super.write(packet);
+        try {
+            byte[] serialized = packet.serialize();
+            this.out.write(String.valueOf(serialized.length).getBytes());
+            this.out.write(serialized);
+
+            // Sleaping 10 milisecond to prevent data from being sent too fast that can cause corruption
+            JavaHelpers.sleep(10);
+        } catch (IOException e) {
+            Logger.error(e);
+        }
     }
 }

@@ -1,5 +1,6 @@
 package me.ImSpooks.core.packets.collection.other;
 
+import lombok.Getter;
 import me.ImSpooks.core.packets.collection.GlobalPacket;
 import me.ImSpooks.core.packets.init.Packet;
 import me.ImSpooks.core.packets.init.channels.WrappedInputStream;
@@ -8,28 +9,28 @@ import me.ImSpooks.core.packets.init.channels.WrappedOutputStream;
 import java.io.IOException;
 
 /**
- * Created by Nick on 13 Oct 2019.
+ * Created by Nick on 17 okt. 2019.
  * Copyright © ImSpooks
  */
 @GlobalPacket
-public class PacketResponseExpired extends Packet {
+public class PacketPing extends Packet {
 
-    private long ms;
+    @Getter private long clientTime;
 
-    public PacketResponseExpired(long ms) {
-        this.ms = ms;
+    public PacketPing(long clientTime, long serverTime) {
+        this.clientTime = clientTime;
     }
 
-    public PacketResponseExpired() {
+    public PacketPing() {
     }
 
     @Override
     public void send(WrappedOutputStream out) throws IOException {
-        out.writeLong(this.ms);
+        out.writeLong(this.clientTime);
     }
 
     @Override
     public void receive(WrappedInputStream in) throws IOException {
-        this.ms = in.readLong();
+        this.clientTime = in.readLong();
     }
 }

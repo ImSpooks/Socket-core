@@ -1,7 +1,6 @@
 package me.ImSpooks.core.bridge.init;
 
 import lombok.Getter;
-import me.ImSpooks.core.packets.init.Packet;
 
 /**
  * Created by Nick on 13 Oct 2019.
@@ -10,7 +9,7 @@ import me.ImSpooks.core.packets.init.Packet;
 public class CommandHandler {
 
     private final String input;
-    @Getter private Packet packet;
+    @Getter private String output = "";
 
     public CommandHandler(String input) {
         this.input = input;

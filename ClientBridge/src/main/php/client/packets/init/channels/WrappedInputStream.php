@@ -1,29 +1,33 @@
 <?php
+
+namespace client\packets\init\channels;
+
 /**
  * Created by Nick on 14 okt. 2019.
  * Copyright © ImSpooks
  */
-
 class WrappedInputStream {
+    // TODO convert to 7.4 if released
 
-    private array $in;
-    private int $index = 0;
+    /** @var array */ private $in;
+    /** @var int */ private $index = 0;
 
     public function __construct(array $in) {
         $this->in = $in;
     }
 
+
     public function read(string $type, bool $increment = true) {
         $object = $this->in[$this->index];
         settype($object, $type);
         if ($increment) {
-            $this->in++;
+            $this->skip(1);
         }
         return $object;
     }
 
     public function skip(int $amount = 1) {
-        $this->in += $amount;
+        $this->index += $amount;
     }
 
     public function readBoolean(): bool {
