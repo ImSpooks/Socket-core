@@ -3,31 +3,31 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>Core</artifactId>
-        <groupId>me.ImSpooks</groupId>
+        <artifactId>core</artifactId>
+        <groupId>me.ImSpooks.core</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>CoreServer</artifactId>
+    <artifactId>coreserver</artifactId>
 
     <dependencies>
         <dependency>
-            <groupId>me.ImSpooks</groupId>
-            <artifactId>Common</artifactId>
+            <groupId>me.ImSpooks.core</groupId>
+            <artifactId>common</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>me.ImSpooks</groupId>
-            <artifactId>Packets</artifactId>
+            <groupId>me.ImSpooks.core</groupId>
+            <artifactId>packets</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
-            <groupId>me.ImSpooks</groupId>
-            <artifactId>Resources</artifactId>
+            <groupId>me.ImSpooks.core</groupId>
+            <artifactId>resources</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

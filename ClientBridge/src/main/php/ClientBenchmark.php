@@ -3,6 +3,7 @@
  * Created by Nick on 15 okt. 2019.
  * Copyright © ImSpooks
  */
+ini_set('memory_limit', '-1');
 
 use client\packets\collection\other\PacketPing;
 use client\packets\collection\other\PacketPingResponse;
@@ -19,7 +20,7 @@ $total = [];
 
 $now = TimeUtils::currentTimeMillis();
 
-for ($i = 0; $i < 1000000; $i++) {
+for ($i = 0; $i < 5000000; $i++) {
     $client->sendAndReadPacket(new PacketPing(TimeUtils::currentTimeMillis()), function (PacketPingResponse $packet) {
         global $toServer;
         global $toClient;
