@@ -55,18 +55,7 @@ public class WrappedInputStream {
 	}
 
 	public int readInt() throws IOException {
-		int val;
-		try {
-			val = this.read(Integer.class, false);
-		} catch (ClassCastException e) {
-			try {
-				val = (int) Math.round(this.read(Double.class, false));
-			} catch (ClassCastException ex) {
-				val = Math.round(this.read(Float.class, false));
-			}
-		}
-		this.index++;
-		return val;
+		return Math.toIntExact(this.readLong());
 	}
 
 	public long readLong() throws IOException {
@@ -85,18 +74,7 @@ public class WrappedInputStream {
 	}
 
 	public short readShort() throws IOException {
-		short val;
-		try {
-			val = this.read(Short.class, false);
-		} catch (ClassCastException e) {
-			try {
-				val = (short) Math.round(this.read(Double.class, false));
-			} catch (ClassCastException ex) {
-				val = (short) Math.round(this.read(Float.class, false));
-			}
-		}
-		this.index++;
-		return val;
+		return (short) this.readInt();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -109,7 +87,11 @@ public class WrappedInputStream {
 			try {
 				val = Byte.class.cast(byteList.get(index));
 			} catch (ClassCastException e) {
-				val = (byte) Math.round(byteList.get(index));
+				try {
+					val = (byte) Long.class.cast(byteList.get(index)).longValue();
+				} catch (ClassCastException ex) {
+					val = (byte) Math.round(byteList.get(index));
+				}
 			}
 
 			byteArray[index] = val;

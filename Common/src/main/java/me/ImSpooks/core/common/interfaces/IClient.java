@@ -1,6 +1,5 @@
 package me.ImSpooks.core.common.interfaces;
 
-import me.ImSpooks.core.common.exceptions.SocketDisconnectedException;
 import me.ImSpooks.core.packets.init.Packet;
 
 /**
@@ -10,7 +9,6 @@ import me.ImSpooks.core.packets.init.Packet;
 public interface IClient {
 
     void handlePacket(Packet receivedPacket);
-    void handleConnection() throws SocketDisconnectedException;
 
     void handleClient();
 

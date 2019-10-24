@@ -59,7 +59,7 @@ public class ParsePackets {
                 if (!file.exists()) {
                     try {
                         Logger.info("Creating new file... " + fileName);
-                        if (file.createNewFile()); {
+                        if (file.createNewFile()) {
                             Logger.info("Created new file.");
                         }
                     } catch (IOException e) {

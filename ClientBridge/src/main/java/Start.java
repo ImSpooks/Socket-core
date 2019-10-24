@@ -38,7 +38,8 @@ public class Start {
                     clientDetails.getString("server_ip"),
                     clientDetails.getInt("server_port"),
                     clientDetails.getString("password"),
-                    clientDetails.getString("client_name")
+                    clientDetails.getString("client_name"),
+                    false
             ));
         }
     }

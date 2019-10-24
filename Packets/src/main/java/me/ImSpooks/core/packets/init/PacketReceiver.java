@@ -1,5 +1,8 @@
 package me.ImSpooks.core.packets.init;
 
+import me.ImSpooks.core.helpers.JavaHelpers;
+import org.tinylog.Logger;
+
 import java.util.*;
 
 /**
@@ -8,12 +11,12 @@ import java.util.*;
  */
 public class PacketReceiver {
 
-    private final Map<Class<? extends Packet>, Set<IncomingPacket<? extends Packet>>> listeners = new HashMap<>();
+    private final Map<Class<? extends Packet>, List<IncomingPacket<? extends Packet>>> listeners = new HashMap<>();
     private final Set<IncomingPacket<? extends Packet>> globalListeners = new HashSet<>();
 
     public PacketReceiver() {
         for (Class<? extends Packet> packet : PacketRegister.getPackets()) {
-            listeners.put(packet, new HashSet<>());
+            listeners.put(packet, new LinkedList<>());
         }
     }
 
@@ -22,26 +25,34 @@ public class PacketReceiver {
             if (this.listeners.get(packet.getClass()).isEmpty())
                 return;
 
-            IncomingPacket<? extends Packet> registered = this.listeners.get(packet.getClass()).iterator().next();
+            try {
+                if (this.listeners.get(packet.getClass()).isEmpty()) {
+                    return;
+                }
 
-            if (registered == null) {
-                return;
+                IncomingPacket<? extends Packet> registered = this.listeners.get(packet.getClass()).get(0);
+
+                if (registered == null) {
+                    return;
+                }
+
+                // only handles one packet receiver
+                if (registered.receive(packet))
+                    this.listeners.get(packet.getClass()).remove(0);
+
+                // handle next one if this multiple listeners are using the same packet
+                if (registered.handleMultiple())
+                    this.received(packet);
+            } catch (NullPointerException e) {
+                Logger.debug(e);
+                JavaHelpers.sleep(1);
             }
-
-            // only handles one packet receiver
-            if (registered.receive(packet)) {
-                this.listeners.get(packet.getClass()).remove(registered);
-
-                // handle next one if this multiple listeners are using a single packet
-            }
-            if (registered.handleMultiple())
-                this.received(packet);
         }
     }
 
     public void removeExpired() {
         synchronized (this.listeners) {
-            for (Set<IncomingPacket<? extends Packet>> set : this.listeners.values()) {
+            for (List<IncomingPacket<? extends Packet>> set : this.listeners.values()) {
                 Iterator<IncomingPacket<? extends Packet>> it = set.iterator();
 
                 while (it.hasNext()) {

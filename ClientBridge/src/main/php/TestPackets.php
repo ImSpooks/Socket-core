@@ -4,10 +4,12 @@
  * Copyright © ImSpooks
  */
 
+use client\enums\ClientType;
 use client\packets\collection\database\PacketRequestCollection;
 use client\packets\collection\database\PacketRequestCollectionResponse;
 use client\packets\collection\other\PacketPing;
 use client\packets\collection\other\PacketPingResponse;
+use client\packets\security\shared\SharedEncryption;
 use client\PhpClient;
 use client\utils\TimeUtils;
 
@@ -22,7 +24,3 @@ $client->sendAndReadPacket(new PacketRequestCollection("test_table"), function (
 }, function ($expired) {
 
 });
-
-//$client->sendAndReadPacket(new PacketRequestCollection("test_table"), function (PacketRequestCollectionResponse $packet) {
-//    var_dump($packet);
-//});

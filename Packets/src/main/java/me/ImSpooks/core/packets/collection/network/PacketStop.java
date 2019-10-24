@@ -1,4 +1,4 @@
-package me.ImSpooks.core.packets.collection.other;
+package me.ImSpooks.core.packets.collection.network;
 
 import me.ImSpooks.core.packets.collection.GlobalPacket;
 import me.ImSpooks.core.packets.init.Packet;
@@ -12,24 +12,16 @@ import java.io.IOException;
  * Copyright © ImSpooks
  */
 @GlobalPacket
-public class PacketResponseExpired extends Packet {
+public class PacketStop extends Packet {
 
-    private long ms;
-
-    public PacketResponseExpired(long ms) {
-        this.ms = ms;
-    }
-
-    public PacketResponseExpired() {
+    public PacketStop() {
     }
 
     @Override
     public void send(WrappedOutputStream out) throws IOException {
-        out.writeLong(this.ms);
     }
 
     @Override
     public void receive(WrappedInputStream in) throws IOException {
-        this.ms = in.readLong();
     }
 }

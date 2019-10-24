@@ -101,7 +101,7 @@ public class Parser {
         AtomicObject<String> parameters = new AtomicObject<>("");
         fields.forEach((key, value) -> parameters.set(parameters.get() + String.format("%s %s = %s, ", value, key, defaultValueFromPhpType(value))));
 
-        a(builder, String.format("public function __construct(%s) {", parameters.get().substring(0, parameters.get().length() - 2)), 1);
+        a(builder, String.format("public function __construct(%s) {", !parameters.get().isEmpty() ? parameters.get().substring(0, parameters.get().length() - 2) : ""), 1);
         fields.keySet().forEach(key -> this.a(builder, String.format("$this->%s = %s;", key.replace("$", ""), key), 2));
         a(builder, "}", 1);
 

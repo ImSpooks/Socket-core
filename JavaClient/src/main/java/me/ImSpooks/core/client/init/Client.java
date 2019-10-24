@@ -2,17 +2,17 @@ package me.ImSpooks.core.client.init;
 
 import me.ImSpooks.core.client.CoreClient;
 import me.ImSpooks.core.common.client.AbstractClient;
-import me.ImSpooks.core.common.exceptions.SocketDisconnectedException;
+import me.ImSpooks.core.enums.ClientType;
 import me.ImSpooks.core.helpers.JavaHelpers;
+import me.ImSpooks.core.helpers.ThreadBuilder;
+import me.ImSpooks.core.packets.collection.network.PacketClosing;
 import me.ImSpooks.core.packets.collection.network.PacketConfirmConnection;
 import me.ImSpooks.core.packets.collection.network.PacketRequestConnection;
+import me.ImSpooks.core.packets.collection.network.PacketStop;
 import me.ImSpooks.core.packets.init.Packet;
 import org.tinylog.Logger;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 
 /**
@@ -36,34 +36,36 @@ public class Client extends AbstractClient {
         this.ip = ip;
         this.port = port;
         this.clientName = clientName;
-
-        Runtime.getRuntime().addShutdownHook(new Thread(this::close, "Shutdown hook"));
     }
+
 
     @Override
     public void connect() {
         this.initialize();
     }
 
-    @Override
-    public void handleConnection() throws SocketDisconnectedException {
-        try {
-            if (this.isConnected())
-                throw new SocketDisconnectedException(String.format("Server listening on %s:%s has disconnected (Crash?)", this.ip, this.port));
-        } catch (SocketDisconnectedException e) {
-            throw new SocketDisconnectedException(String.format("Server listening on %s:%s has disconnected (Crash?)", this.ip, this.port));
-        }
-    }
-
+    private int received = 0;
     @Override
     public void handlePacket(Packet receivedPacket) {
         if (receivedPacket == null) {
             Logger.debug("Received a packet that is equal to NULL, check whats wrong.");
             return;
         }
+//        System.out.println("received = " + received++);
 
         //System.out.println("handling received packet " + receivedPacket.getClass().getSimpleName());
-        if (this.connectionConfirmed) {
+        if (receivedPacket instanceof PacketClosing) {
+            try {
+                this.socket.close();
+            } catch (IOException e) {
+                Logger.error(e);
+            }
+        }
+        else if (receivedPacket instanceof PacketStop) {
+            Logger.info("Received stop command from the core server");
+            this.coreClient.stop();
+        }
+        else if (this.connectionConfirmed) {
             this.coreClient.getPacketReceiver().received(receivedPacket);
         }
         else {
@@ -80,9 +82,9 @@ public class Client extends AbstractClient {
                 return;
             }
             this.connectionConfirmed = true;
-            Logger.info("Connection confirmed, packets can now be send...");
+            Logger.info("Connection confirmed, packets can now be send.");
 
-            this.coreClient.getCoreConnected().run();
+            new Thread(this.coreClient.getCoreConnected()).start();
         }
     }
 
@@ -90,12 +92,20 @@ public class Client extends AbstractClient {
         Logger.info(String.format("Establishing connection... %s:%s", this.ip, this.port));
         try {
             this.socket = new Socket(this.ip, this.port);
-            this.socket.setTcpNoDelay(true);
 
             this.in = new DataInputStream(new BufferedInputStream(this.socket.getInputStream()));
-            this.out = new DataOutputStream(this.socket.getOutputStream());
+            this.out = new DataOutputStream(new BufferedOutputStream(this.socket.getOutputStream()));
 
-            new Thread(new Runnable() {
+//            this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+//            this.out = new PrintWriter(socket.getOutputStream(), true);
+//
+//            this.in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+//            this.out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8)), true);
+
+            this.socket.setTcpNoDelay(true);
+            this.socket.setSoTimeout(5000);
+
+            new ThreadBuilder(new Runnable() {
                 void disconnect() {
                     connectionConfirmed = false;
                     JavaHelpers.sleep(RECONNECT_INTERVAL);
@@ -106,22 +116,19 @@ public class Client extends AbstractClient {
                     while (!socket.isClosed()) {
                         try {
                             JavaHelpers.sleep(RECONNECT_INTERVAL);
-                            handleConnection();
-                        } catch (SocketDisconnectedException e) {
-                            Logger.warn("Connection to server lost, trying again in {} seconds", RECONNECT_INTERVAL / 1000L);
-                            disconnect();
-                            break;
                         } catch (Exception e) {
                             Logger.warn(e, "Connection to server lost duo to a strange error, trying again in {} seconds", RECONNECT_INTERVAL / 1000L);
                             disconnect();
                             break;
                         }
                     }
+                    Logger.warn("Connection to server lost, trying again in {} seconds", RECONNECT_INTERVAL / 1000L);
+                    disconnect();
                 }
-            }, "Connection handler").start();
+            }, "Connection handler", Thread.MIN_PRIORITY).start();
 
-            new Thread(() -> {
-                started = true;
+            new ThreadBuilder(() -> {
+                closed = false;
                 while (!socket.isClosed()) {
                     try {
                         handleClient();
@@ -130,10 +137,12 @@ public class Client extends AbstractClient {
                         break;
                     }
                 }
-                started = false;
-            }, "Client handler").start();
+                closed = true;
+            }, "Client handler", Thread.MAX_PRIORITY).start();
 
-            this.write(new PacketRequestConnection(this.coreClient.getPassword(), this.coreClient.getVerificationId(), this.clientName));
+            Logger.info("Connection established, confirming identity...");
+            this.write(new PacketRequestConnection(this.coreClient.getPassword(), this.coreClient.getVerificationId(), this.clientName, ClientType.JAVA));
+            Logger.info("Connection verification requested.");
 
         } catch (IOException e) {
             Logger.info("No connection established, trying again in {} seconds", RECONNECT_INTERVAL / 1000L);

@@ -17,9 +17,10 @@ class WrappedInputStream {
     }
 
 
-    public function read(string $type, bool $increment = true) {
+    public function read(string $type = "", bool $increment = true) {
         $object = $this->in[$this->index];
-        settype($object, $type);
+        if (strlen($type) > 0)
+            settype($object, $type);
         if ($increment) {
             $this->skip(1);
         }

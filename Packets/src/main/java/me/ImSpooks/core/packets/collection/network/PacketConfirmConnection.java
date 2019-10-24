@@ -7,6 +7,7 @@ import me.ImSpooks.core.packets.init.channels.WrappedOutputStream;
 import me.ImSpooks.core.packets.security.shared.SharedEncryption;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Created by Nick on 02 okt. 2019.
@@ -27,8 +28,8 @@ public class PacketConfirmConnection extends Packet {
         if (SharedEncryption.getEncryption() == null)
             throw new RuntimeException("Encryption was not yet initialized");
 
-        byte[] encrypted = SharedEncryption.getEncryption().encrypt(this.randomKey);
-        out.write(encrypted);
+        String encrypted = SharedEncryption.getEncryption().encryptCollection(this.randomKey);
+        out.writeString(encrypted);
     }
 
     @Override
@@ -36,9 +37,9 @@ public class PacketConfirmConnection extends Packet {
         if (SharedEncryption.getEncryption() == null)
             throw new RuntimeException("Encryption was not yet initialized");
 
-        byte[] encrypted = in.readBytes();
+        String encrypted = in.readString();
 
-        Object[] result = SharedEncryption.getEncryption().decrypt(encrypted, Long.class);
-        this.randomKey = (long) result[0];
+        ArrayList result = SharedEncryption.getEncryption().decryptCollection(encrypted);
+        this.randomKey = (Long) result.get(0);
     }
 }

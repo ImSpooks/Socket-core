@@ -23,7 +23,7 @@ public abstract class IncomingPacket<T extends Packet> {
     }
 
     public boolean hasExpired() {
-        return System.currentTimeMillis() - this.registerTime >= this.expireAfter;
+        return expireAfter != -1 && System.currentTimeMillis() - this.registerTime >= this.expireAfter;
     }
 
     @SuppressWarnings("unchecked")

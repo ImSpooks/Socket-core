@@ -12,3 +12,4 @@ database/
 *.bat
 hs_err_pid*
 *.zip
+ClientBridge/src/main/php/client/ClientSettings.php

@@ -1,6 +1,7 @@
 package me.ImSpooks.core.server.connection;
 
 import me.ImSpooks.core.helpers.JavaHelpers;
+import me.ImSpooks.core.helpers.ThreadBuilder;
 
 import java.util.*;
 
@@ -14,12 +15,12 @@ public class ConnectionMaps {
     public static final Map<Long, Integer> connectionAttempts = new HashMap<>();
 
     static {
-        new Thread(() -> {
+        new ThreadBuilder(() -> {
             while (true) {
                 JavaHelpers.sleep(1000 * 60 * 5);
                 blockedHosts.clear();
                 connectionAttempts.clear();
             }
-        }, "Clear blocked hosts Thread").start();
+        }, "Clear blocked hosts Thread", Thread.MIN_PRIORITY).start();
     }
 }

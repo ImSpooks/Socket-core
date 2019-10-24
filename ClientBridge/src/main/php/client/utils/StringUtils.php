@@ -15,4 +15,15 @@ class StringUtils {
         return strpos($string, $value) !== false;
     }
 
+    public static function char_at(string $string, int $position) {
+        return $string{$position};
+    }
+
+    public static function getBytes($string): array {
+        return array_values(unpack('C*', $string));
+    }
+
+    public static function fromBytes($bytes): string {
+        return implode(array_map("chr", $bytes));
+    }
 }

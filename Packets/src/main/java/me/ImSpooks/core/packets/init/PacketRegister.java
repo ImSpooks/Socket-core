@@ -1,11 +1,9 @@
 package me.ImSpooks.core.packets.init;
 
 import me.ImSpooks.core.packets.collection.database.*;
-import me.ImSpooks.core.packets.collection.network.PacketConfirmConnection;
-import me.ImSpooks.core.packets.collection.network.PacketRequestConnection;
+import me.ImSpooks.core.packets.collection.network.*;
 import me.ImSpooks.core.packets.collection.other.PacketPing;
 import me.ImSpooks.core.packets.collection.other.PacketPingResponse;
-import me.ImSpooks.core.packets.collection.other.PacketResponseExpired;
 import me.ImSpooks.core.packets.type.PacketType;
 
 import java.lang.reflect.Constructor;
@@ -31,6 +29,8 @@ public class PacketRegister {
         register(1, PacketRequestConnection.class, PacketType.NETWORK);
         register(2, PacketConfirmConnection.class, PacketType.NETWORK);
         register(3, PacketResponseExpired.class, PacketType.NETWORK);
+        register(4, PacketClosing.class, PacketType.NETWORK);
+        register(5, PacketStop.class, PacketType.NETWORK);
 
         // database=
         register(1, PacketRequestData.class, PacketType.DATABASE);

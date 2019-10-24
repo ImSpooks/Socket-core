@@ -2,18 +2,17 @@ package me.ImSpooks.core.bridge.init;
 
 import lombok.Getter;
 import me.ImSpooks.core.bridge.Bridge;
-import me.ImSpooks.core.common.exceptions.SocketDisconnectedException;
+import me.ImSpooks.core.common.client.AbstractClient;
 import me.ImSpooks.core.common.interfaces.IServer;
+import me.ImSpooks.core.helpers.ThreadBuilder;
 import me.ImSpooks.core.packets.init.Packet;
 import org.tinylog.Logger;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
-import java.util.Iterator;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Nick on 26 sep. 2019.
@@ -22,7 +21,7 @@ import java.util.List;
 public class ClientBridgeServer implements IServer {
 
     @Getter private final int port;
-    @Getter private final List<ClientBridge> clients;
+    @Getter private final Map<ClientBridge, Thread> clients;
 
     @Getter private ServerSocket serverSocket;
 
@@ -34,7 +33,7 @@ public class ClientBridgeServer implements IServer {
     public ClientBridgeServer(int port, Bridge coreServer) {
         this.coreServer = coreServer;
         this.port = port;
-        this.clients = new ArrayList<>();
+        this.clients = new HashMap<>();
 
         try {
             this.serverSocket = new ServerSocket(this.port);
@@ -42,38 +41,36 @@ public class ClientBridgeServer implements IServer {
             Logger.error(e);
         }
 
-        new Thread(this::handleClients, "Client handler").start();
-        new Thread(this::handleServer, "Server handler").start();
+
+        new ThreadBuilder(this::handleClients, "Connection handler", Thread.MAX_PRIORITY).start();
     }
 
     @Override
-    public void handleServer() {
+    public void handleServer(AbstractClient client) {
+        if (!(client instanceof ClientBridge)) {
+            Logger.error("Something went wrong here");
+            client.close();
+            return;
+        }
         while (!this.serverSocket.isClosed()) {
-            Iterator<ClientBridge> iterator = this.clients.iterator();
+            if (client.isClosed()) {
+                this.clients.remove(client);
+                Logger.info("Client \'{}\' on ip \'{}\' was disconnected.", client.getClientName().isEmpty() ? "unknown" : client.getClientName(), client.getSocket().getInetAddress().getHostAddress());
+                return;
+            }
+
+            if (client.getSocket().isClosed()) {
+                this.clients.remove(client);
+                Logger.error("Client \'{}\' on ip \'\' closed unexpectedly, removing them from the list", client.getClientName().isEmpty() ? "unknown" : client.getClientName(), client.getSocket().getInetAddress().getHostAddress());
+                break;
+            }
 
             try {
-                while (iterator.hasNext()) {
-                    ClientBridge client = iterator.next();
-
-                    if (client.getSocket().isClosed()) {
-                        iterator.remove();
-                        continue;
-                    }
-
-                    try {
-                        client.handleConnection();
-                        client.handleClient();
-                    } catch (SocketDisconnectedException e) {
-                        iterator.remove();
-                        Logger.info("Client \'{}\' on ip \'{}\' was disconnected.", client.getClientName().isEmpty() ? "unknown" : client.getClientName(), client.getSocket().getInetAddress().getHostAddress());
-                    } catch (Exception e) {
-                        iterator.remove();
-                        Logger.error(e, "Something went wrong with client \'{}\', removing them from the list", client.getClientName().isEmpty() ? "unknown" : client.getClientName());
-                        client.close();
-                    }
-                }
-            } catch (ConcurrentModificationException ignored) {
-                // why does this even exist
+                client.handleClient();
+            } catch (Exception e) {
+                this.clients.remove(client);
+                Logger.error(e, "Something went wrong while handling client \'{}\', closing client...", client.getClientName().isEmpty() ? "unknown" : client.getClientName());
+                client.close();
             }
         }
     }
@@ -83,17 +80,20 @@ public class ClientBridgeServer implements IServer {
         this.started = true;
         while (!this.serverSocket.isClosed()) {
             try {
+                Socket socket = serverSocket.accept();
                 if (serverSocket.isClosed())
                     break;
-                Socket socket = serverSocket.accept();
 
                 ClientBridge client = new ClientBridge(socket, this.coreServer);
                 client.connect();
-                Logger.info("Client on ip \'{}\' connected", client.getSocket().getInetAddress().getHostAddress());
+                Logger.info("Client \'{}\' on ip \'{}\' connected, waiting for approval.", client.getClientName().isEmpty() ? "unknown" : client.getClientName(), client.getSocket().getInetAddress().getHostAddress());
 
-                this.clients.add(client);
+                this.clients.put(client, new ThreadBuilder(() -> {
+                    this.handleServer(client);
+                }, "Client  Handler %s @" + socket.getInetAddress().getHostAddress()).start().getThread());
             } catch (IOException e) {
-                Logger.error(e);
+                if (!serverSocket.isClosed())
+                    Logger.error(e);
             }
         }
         this.started = false;
@@ -101,7 +101,7 @@ public class ClientBridgeServer implements IServer {
 
     @Override
     public void write(String server, Packet packet) {
-        for (ClientBridge client : this.clients) {
+        for (ClientBridge client : this.clients.keySet()) {
             if (client.getClientName().equalsIgnoreCase(server)) {
                 client.write(packet);
             }
@@ -112,6 +112,10 @@ public class ClientBridgeServer implements IServer {
     public void close() {
         try {
             this.serverSocket.close();
+            this.clients.forEach((client, thread) -> {
+                client.close();
+                thread.interrupt();
+            });
         } catch (IOException e) {
             Logger.error(e);
         }

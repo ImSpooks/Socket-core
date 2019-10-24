@@ -1,8 +1,10 @@
 package me.ImSpooks.core.server.init;
 
 import lombok.Getter;
-import me.ImSpooks.core.common.exceptions.SocketDisconnectedException;
+import me.ImSpooks.core.common.client.AbstractClient;
 import me.ImSpooks.core.common.interfaces.IServer;
+import me.ImSpooks.core.helpers.ThreadBuilder;
+import me.ImSpooks.core.packets.collection.network.PacketClosing;
 import me.ImSpooks.core.packets.init.Packet;
 import me.ImSpooks.core.server.CoreServer;
 import org.tinylog.Logger;
@@ -10,10 +12,8 @@ import org.tinylog.Logger;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
-import java.util.Iterator;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Nick on 26 sep. 2019.
@@ -22,7 +22,7 @@ import java.util.List;
 public class Server implements IServer {
 
     @Getter private final int port;
-    @Getter private final List<ServerClient> clients;
+    @Getter private final Map<ServerClient, Thread> clients;
 
     @Getter private ServerSocket serverSocket;
 
@@ -34,7 +34,7 @@ public class Server implements IServer {
     public Server(int port, CoreServer coreServer) {
         this.coreServer = coreServer;
         this.port = port;
-        this.clients = new ArrayList<>();
+        this.clients = new HashMap<>();
 
         try {
             this.serverSocket = new ServerSocket(this.port);
@@ -43,38 +43,35 @@ public class Server implements IServer {
         }
 
 
-        new Thread(this::handleClients, "Client handler").start();
-        new Thread(this::handleServer, "Server handler").start();
+        new ThreadBuilder(this::handleClients, "Connection handler", Thread.MAX_PRIORITY).start();
     }
 
     @Override
-    public void handleServer() {
+    public void handleServer(AbstractClient client) {
+        if (!(client instanceof ServerClient)) {
+            Logger.error("Something went wrong here");
+            client.close();
+            return;
+        }
         while (!this.serverSocket.isClosed()) {
-            Iterator<ServerClient> iterator = this.clients.iterator();
+            if (client.isClosed()) {
+                this.clients.remove(client);
+                Logger.info("Client \'{}\' on ip \'{}\' was disconnected.", client.getClientName().isEmpty() ? "unknown" : client.getClientName(), client.getSocket().getInetAddress().getHostAddress());
+                return;
+            }
+
+            if (client.getSocket().isClosed()) {
+                this.clients.remove(client);
+                Logger.error("Client \'{}\' on ip \'\' closed unexpectedly, removing them from the list", client.getClientName().isEmpty() ? "unknown" : client.getClientName(), client.getSocket().getInetAddress().getHostAddress());
+                break;
+            }
 
             try {
-                while (iterator.hasNext()) {
-                    ServerClient client = iterator.next();
-
-                    if (client.getSocket().isClosed()) {
-                        iterator.remove();
-                        continue;
-                    }
-
-                    try {
-                        client.handleConnection();
-                        client.handleClient();
-                    } catch (SocketDisconnectedException e) {
-                        iterator.remove();
-                        Logger.info("Client \'{}\' on ip \'{}\' was disconnected.", client.getClientName().isEmpty() ? "unknown" : client.getClientName(), client.getSocket().getInetAddress().getHostAddress());
-                    } catch (Exception e) {
-                        iterator.remove();
-                        Logger.error(e, "Something went wrong with client \'{}\', removing them from the list", client.getClientName().isEmpty() ? "unknown" : client.getClientName());
-                        client.close();
-                    }
-                }
-            } catch (ConcurrentModificationException ignored) {
-                // why does this even exist
+                client.handleClient();
+            } catch (Exception e) {
+                this.clients.remove(client);
+                Logger.error(e, "Something went wrong while handling client \'{}\', closing client...", client.getClientName().isEmpty() ? "unknown" : client.getClientName());
+                client.close();
             }
         }
     }
@@ -84,17 +81,18 @@ public class Server implements IServer {
         this.started = true;
         while (!this.serverSocket.isClosed()) {
             try {
+                Socket socket = serverSocket.accept();
                 if (serverSocket.isClosed())
                     break;
-                Socket socket = serverSocket.accept();
 
                 ServerClient client = new ServerClient(socket, this.coreServer);
                 client.connect();
                 Logger.info("Client \'{}\' on ip \'{}\' connected, waiting for approval.", client.getClientName().isEmpty() ? "unknown" : client.getClientName(), client.getSocket().getInetAddress().getHostAddress());
 
-                this.clients.add(client);
+                this.clients.put(client, new ThreadBuilder(() -> this.handleServer(client), "Client  Handler %s @" + socket.getInetAddress().getHostAddress()).start().getThread());
             } catch (IOException e) {
-                Logger.error(e);
+                if (!serverSocket.isClosed())
+                    Logger.error(e);
             }
         }
         this.started = false;
@@ -102,7 +100,7 @@ public class Server implements IServer {
 
     @Override
     public void write(String server, Packet packet) {
-        for (ServerClient client : this.clients) {
+        for (ServerClient client : this.clients.keySet()) {
             if (client.getClientName().equalsIgnoreCase(server)) {
                 client.write(packet);
             }
@@ -113,6 +111,11 @@ public class Server implements IServer {
     public void close() {
         try {
             this.serverSocket.close();
+            this.clients.forEach((client, thread) -> {
+                client.write(new PacketClosing());
+                client.close();
+                thread.interrupt();
+            });
         } catch (IOException e) {
             Logger.error(e);
         }

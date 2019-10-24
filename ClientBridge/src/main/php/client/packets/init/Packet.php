@@ -17,7 +17,6 @@ abstract class Packet {
     public function serialize(): string {
         $out = new WrappedOutputStream();
 
-        $out->write(1);
         $out->writeInt($this->getId());
         $this->send($out);
 
@@ -34,7 +33,6 @@ abstract class Packet {
             $data = json_decode($input);
             $in = new WrappedInputStream($data);
 
-            $in->skip();
             $packetId = $in->readInt();
             $packet = PacketRegister::createInstance($packetId);
             $packet->receive($in);

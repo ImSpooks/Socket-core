@@ -5,14 +5,15 @@ import lombok.Getter;
 import lombok.Setter;
 import me.ImSpooks.core.common.exceptions.SocketDisconnectedException;
 import me.ImSpooks.core.common.interfaces.IClient;
-import me.ImSpooks.core.helpers.JavaHelpers;
+import me.ImSpooks.core.packets.collection.network.PacketClosing;
 import me.ImSpooks.core.packets.init.Packet;
 import org.tinylog.Logger;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 
 /**
  * Created by Nick on 02 okt. 2019.
@@ -23,50 +24,102 @@ public abstract class AbstractClient implements IClient {
 
     @Getter protected Socket socket;
 
-    @Getter protected DataInputStream in;
-    protected DataOutputStream out;
+    @Getter protected InputStream in;
+    protected OutputStream out;
 
-    @Getter protected boolean started = false;
+    @Getter @Setter protected boolean closed = true;
 
+    protected static final byte[] SPLITTERS = new byte[] {Ascii.FF, Ascii.DC2, Ascii.DC4, Ascii.CAN};
+
+    private String tmp = "";
     @Override
     public void handleClient() {
         try {
-            if (this.in.available() == 0) {
-                JavaHelpers.sleep(1);
+            if (this.socket.getInputStream().available() == 0) {
                 return;
             }
         } catch (IOException e) {
             Logger.error(e);
         }
 
-
-
         try {
-            int length = in.readInt();
-            byte[] buffer = new byte[length > 0 ? length : 128];
+            String packet;
+            byte[] buffer = new byte[this.in.available()];
             in.read(buffer);
-            String decoded = new String(buffer);
+            packet = new String(buffer);
 
-            // Got corrupted data, splitting each packet with Form Feed
-            for (byte splitter : new byte[] {Ascii.FF, Ascii.DC2}) {
-                decoded = decoded.replace(
-                        Character.toString((char) splitter),
-                        "\n"
-                );
+            if (!tmp.isEmpty() && !packet.startsWith("[")) {
+                packet = tmp + packet;
             }
 
-            if (decoded.contains("\n")) {
-                String[] split = decoded.split("\n");
-
-                for (String s : split) {
-                    this.handlePacket(Packet.deserialize(s.trim()));
+            for (byte splitter : SPLITTERS) {
+                String character = Character.toString((char) splitter);
+                if (packet.contains(character)) {
+                    System.out.println("Packet contains character " + character);
+                    packet = packet.replace(
+                            Character.toString((char) splitter),
+                            "\n"
+                    );
                 }
-                return;
             }
 
-            this.handlePacket(Packet.deserialize(decoded));
-        } catch (IOException e) {
-            Logger.error(e);
+            tmp = "";
+            String[] split = packet.split("\n");
+            for (int i = 0; i < split.length; i++) {
+                String s = split[i].trim();
+                if (s.isEmpty())
+                    continue;
+
+                if (i == split.length - 1) { // last entry
+                    if (!s.endsWith("]")) { // check if packet wasn't correctly received, and add it temporary and add it to the next receive event
+                        tmp = s;
+                        continue;
+                    }
+                }
+
+                this.handlePacket(Packet.deserialize(s));
+            }
+//            System.out.println();
+//            System.out.println();
+//            System.out.println();
+//            System.out.println();
+//
+//            System.out.println("packet = " + packet);
+//            System.out.println("trimmed = " + trimmed);
+//
+//            for (String s : trimmed.split("\n")) {
+//                s = s .trim();
+//                if (s.isEmpty())
+//                    continue;
+//
+//
+//            }
+
+//            StringBuilder packet = new StringBuilder();
+//            byte[] buffer = new byte[this.in.available()];
+//            in.read(buffer);
+//            packet.append(new String(buffer).replace("\r", ""));
+//
+//            String decoded = packet.toString().trim();
+//
+//            decoded = tmp.toString() + decoded;
+//
+//            if (decoded.startsWith("\n")) decoded = decoded.substring(1);
+//            if (decoded.isEmpty())
+//                return;
+//
+//            if (!decoded.startsWith("[") && decoded.endsWith("]")) {
+//                decoded = "[" + decoded;
+//            }
+//            if (!decoded.startsWith("[") || !decoded.endsWith("]")) {
+//                tmp.append(packet.toString());
+//                return;
+//            }
+//            if (!decoded.startsWith("[") && decoded.endsWith("]"))
+//                decoded = "[" + decoded;
+//            tmp = new StringBuilder();
+//
+//            decoded = decoded.trim();
         } catch (Exception e) {
             Logger.error(e);
         }
@@ -75,33 +128,39 @@ public abstract class AbstractClient implements IClient {
     @Override
     public void write(Packet packet) {
         try {
-            byte[] serialized = packet.serialize();
-            this.out.writeInt(serialized.length);
-            this.out.write(serialized);
-
-            // Sleaping 5 millisecond to prevent data from being sent too fast that can cause corruption
-            //JavaHelpers.sleep(5);
+            if (this.out != null) {
+                this.out.write((packet.serialize() + '\r' + '\n').getBytes());
+                this.out.flush();
+            }
+        } catch (SocketException e) {
+            this.out = null;
+            this.close();
         } catch (IOException e) {
             Logger.error(e);
         }
+
+//        this.out.println(packet.serialize());
+//        this.out.flush();
     }
 
     @Override
     public void close() {
         try {
-            started = false;
-            this.socket.close();
+            closed = true;
+            if (this.socket != null) {
+                this.write(new PacketClosing());
+                this.socket.close();
+            }
         } catch (IOException e) {
             Logger.error(e);
         }
     }
 
-
     protected boolean isConnected() throws SocketDisconnectedException {
-        try {
-            return socket.getInputStream().read() == -1;
-        } catch (IOException e) {
-            throw new SocketDisconnectedException(String.format("Client \'%s\' has disconnected (Crash?)", this.clientName));
-        }
+//        try {
+            return true;
+//        } catch (IOException e) {
+//            throw new SocketDisconnectedException(String.format("Client \'%s\' has disconnected (Crash?)", this.clientName));
+//        }
     }
 }

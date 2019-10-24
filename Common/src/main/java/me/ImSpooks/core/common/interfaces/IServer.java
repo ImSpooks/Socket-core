@@ -1,5 +1,6 @@
 package me.ImSpooks.core.common.interfaces;
 
+import me.ImSpooks.core.common.client.AbstractClient;
 import me.ImSpooks.core.packets.init.Packet;
 
 /**
@@ -8,7 +9,7 @@ import me.ImSpooks.core.packets.init.Packet;
  */
 public interface IServer {
 
-    void handleServer();
+    void handleServer(AbstractClient client);
     void handleClients();
 
     void write(String server, Packet packet);

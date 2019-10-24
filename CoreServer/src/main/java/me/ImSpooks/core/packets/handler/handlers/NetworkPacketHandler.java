@@ -1,13 +1,17 @@
 package me.ImSpooks.core.packets.handler.handlers;
 
 import me.ImSpooks.core.common.client.AbstractClient;
+import me.ImSpooks.core.packets.collection.network.PacketClosing;
 import me.ImSpooks.core.packets.collection.network.PacketConfirmConnection;
 import me.ImSpooks.core.packets.collection.network.PacketRequestConnection;
 import me.ImSpooks.core.packets.handler.PacketHandler;
 import me.ImSpooks.core.packets.handler.PacketHandling;
 import me.ImSpooks.core.packets.handler.SubPacketHandler;
 import me.ImSpooks.core.server.connection.ConnectionMaps;
+import me.ImSpooks.core.server.init.ServerClient;
 import org.tinylog.Logger;
+
+import java.io.IOException;
 
 /**
  * Created by Nick on 01 okt. 2019.
@@ -38,11 +42,24 @@ public class NetworkPacketHandler extends SubPacketHandler {
             client.close();
             return;
         }
-        Logger.info("Password was correct. Client ({}) connected with IP \'{}\'", packet.getClientName(), client.getSocket().getInetAddress().getHostAddress());
+        Logger.info("Password was correct. Client (\"{}\":{}) connected with IP \'{}\'", packet.getClientName(), packet.getClientType().getName(), client.getSocket().getInetAddress().getHostAddress());
+
+        Thread thread = this.packetHandler.getCoreServer().getServer().getClients().get((ServerClient) client);
+        thread.setName(String.format(thread.getName(), client.getClientName()));
 
         this.packetHandler.confirmed.put(client, true);
 
         client.setClientName(packet.getClientName());
         client.write(new PacketConfirmConnection(packet.getRandomKey()));
+    }
+
+    @PacketHandling
+    private void handlePacket(PacketClosing packet, AbstractClient client) {
+        client.setClosed(true);
+        try {
+            client.getSocket().close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

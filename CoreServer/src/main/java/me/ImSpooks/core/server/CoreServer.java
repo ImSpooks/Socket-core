@@ -1,6 +1,9 @@
 package me.ImSpooks.core.server;
 
 import lombok.Getter;
+import me.ImSpooks.core.commands.CommandStop;
+import me.ImSpooks.core.common.commands.CommandManager;
+import me.ImSpooks.core.common.interfaces.CoreImplementation;
 import me.ImSpooks.core.common.json.JSONConfig;
 import me.ImSpooks.core.helpers.JavaHelpers;
 import me.ImSpooks.core.packets.handler.PacketHandler;
@@ -15,29 +18,16 @@ import org.tinylog.Logger;
  * Created by Nick on 27 sep. 2019.
  * Copyright © ImSpooks
  */
-public class CoreServer {
+public class CoreServer implements CoreImplementation {
 
     @Getter private Server server;
-
     @Getter private final String password;
 
     @Getter private PacketHandler packetHandler;
-
     @Getter private IDatabase database;
+    @Getter private CommandManager commandManager;
 
     public CoreServer(String password, int port) {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            // waiting for tinylogger
-            JavaHelpers.sleep(10);
-            Logger.info("Shutting down server...");
-            server.close();
-            try {
-                database.close();
-            } catch (Exception e) {
-                Logger.warn(e, "An exception was thrown while closing the database connection.");
-            }
-            Logger.info("Server successfully shut down.");
-        }, "Shutdown hook"));
 
         this.password = password;
 
@@ -90,5 +80,30 @@ public class CoreServer {
             Logger.error("No database type found, exiting...");
             System.exit(-1);
         }
+
+        this.commandManager = new CommandManager(System.in, this);
+        this.commandManager.registerCommand(new CommandStop(this));
+    }
+
+    @Override
+    public void stop() {
+        this.shutdownHook().run();
+        System.exit(0);
+    }
+
+    @Override
+    public Runnable shutdownHook() {
+        return () -> {
+            // waiting for tinylogger
+            JavaHelpers.sleep(10);
+            Logger.info("Shutting down server...");
+            server.close();
+            try {
+                database.close();
+            } catch (Exception e) {
+                Logger.warn(e, "An exception was thrown while closing the database connection.");
+            }
+            Logger.info("Server successfully shut down.");
+        };
     }
 }

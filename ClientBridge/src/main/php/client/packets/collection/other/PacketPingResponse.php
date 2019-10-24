@@ -1,6 +1,6 @@
 <?php
 /**
- * Created by Nick on 18 okt 2019.
+ * Created by Nick on 24 okt 2019.
  * Copyright © ImSpooks
  */
 
@@ -20,14 +20,14 @@ class PacketPingResponse extends Packet {
         $this->estimatedTime = $estimatedTime;
     }
 
-    public function send(WrappedOutputStream $out) {
-        $out->writeLong($this->serverTime);
-        $out->writeLong($this->estimatedTime);
-    }
-
     public function receive(WrappedInputStream $in) {
         $this->serverTime = $in->readLong();
         $this->estimatedTime = $in->readLong();
+    }
+
+    public function send(WrappedOutputStream $out) {
+        $out->writeLong($this->serverTime);
+        $out->writeLong($this->estimatedTime);
     }
 
     public function getEstimatedTime(): int {

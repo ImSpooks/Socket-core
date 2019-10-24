@@ -2,15 +2,11 @@ package me.ImSpooks.core.server.init;
 
 import lombok.Getter;
 import me.ImSpooks.core.common.client.AbstractClient;
-import me.ImSpooks.core.common.exceptions.SocketDisconnectedException;
 import me.ImSpooks.core.packets.init.Packet;
 import me.ImSpooks.core.server.CoreServer;
 import org.tinylog.Logger;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 
 /**
@@ -30,45 +26,29 @@ public class ServerClient extends AbstractClient {
     }
 
     @Override
-    public void handleConnection() throws SocketDisconnectedException {
-        if (this.isConnected())
-            throw new SocketDisconnectedException(String.format("Client \'%s\' has disconnected (Crash?)", this.clientName));
-    }
-
-    @Override
     public void connect() {
-        started = true;
+        closed = false;
         try {
-            this.socket.setTcpNoDelay(true);
-
             this.in = new DataInputStream(new BufferedInputStream(this.socket.getInputStream()));
-            this.out = new DataOutputStream(this.socket.getOutputStream());
+            this.out = new DataOutputStream(new BufferedOutputStream(this.socket.getOutputStream()));
+
+            this.socket.setTcpNoDelay(true);
+            this.socket.setSoTimeout(5000);
         } catch (IOException e) {
             Logger.error(e);
         }
     }
 
+    private int received = 0;
     @Override
     public void handlePacket(Packet receivedPacket) {
+//        System.out.println("received = " + received++);
         this.coreServer.getPacketHandler().handlePacket(receivedPacket, this);
-        /*switch (receivedPacket.getType()) {
-            default:
-                break;
-
-            case NETWORK:
-                NetworkPacketHandler.getInstance().handlePacket(receivedPacket, this);
-                break;
-
-            case DATABASE:
-                DatabasePacketHandler.getInstance().handlePacket(receivedPacket, this);
-
-            case OTHER:
-                break;
-        }*/
     }
-
+    private int send = 0;
     @Override
     public void write(Packet packet) {
+//        System.out.println("send = " + send++);
         super.write(packet);
     }
 }

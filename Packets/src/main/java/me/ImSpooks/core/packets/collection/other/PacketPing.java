@@ -17,7 +17,7 @@ public class PacketPing extends Packet {
 
     @Getter private long clientTime;
 
-    public PacketPing(long clientTime, long serverTime) {
+    public PacketPing(long clientTime) {
         this.clientTime = clientTime;
     }
 

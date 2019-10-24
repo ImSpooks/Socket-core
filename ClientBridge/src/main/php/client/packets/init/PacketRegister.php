@@ -7,6 +7,10 @@
 namespace client\packets\init;
 
 use AssertionError;
+use client\packets\collection\network\PacketClosing;
+use client\packets\collection\network\PacketConfirmConnection;
+use client\packets\collection\network\PacketRequestConnection;
+use client\packets\collection\network\PacketResponseExpired;
 use client\packets\collection\other\PacketPing;
 use client\packets\collection\other\PacketPingResponse;
 use client\packets\type\PacketType;
@@ -16,7 +20,6 @@ use client\packets\collection\database\PacketRequestCollectionResponse;
 use client\packets\collection\database\PacketRequestData;
 use client\packets\collection\database\PacketRequestDataResponse;
 use client\packets\collection\database\PacketUpdateData;
-use client\packets\collection\other\PacketResponseExpired;
 use InvalidArgumentException;
 use stdClass;
 
@@ -30,7 +33,10 @@ class PacketRegister {
 
     public static function init() {
         //network
+        self::register(1, PacketRequestConnection::class, PacketType::NETWORK);
+        self::register(2, PacketConfirmConnection::class, PacketType::NETWORK);
         self::register(3, PacketResponseExpired::class, PacketType::NETWORK);
+        self::register(4, PacketClosing::class, PacketType::NETWORK);
 
         // database
         self::register(1, PacketRequestData::class, PacketType::DATABASE);

@@ -1,6 +1,6 @@
 <?php
 /**
- * Created by Nick on 18 okt 2019.
+ * Created by Nick on 24 okt 2019.
  * Copyright © ImSpooks
  */
 
@@ -18,12 +18,12 @@ class PacketPing extends Packet {
         $this->clientTime = $clientTime;
     }
 
-    public function send(WrappedOutputStream $out) {
-        $out->writeLong($this->clientTime);
-    }
-
     public function receive(WrappedInputStream $in) {
         $this->clientTime = $in->readLong();
+    }
+
+    public function send(WrappedOutputStream $out) {
+        $out->writeLong($this->clientTime);
     }
 
     public function getClientTime(): int {
