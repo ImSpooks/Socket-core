@@ -99,7 +99,9 @@ public class Parser {
 //        a(builder, " */", 1);
 
         AtomicObject<String> parameters = new AtomicObject<>("");
-        fields.forEach((key, value) -> parameters.set(parameters.get() + String.format("%s %s = %s, ", value, key, defaultValueFromPhpType(value))));
+        fields.forEach((key, value) -> {
+            parameters.set(parameters.get() + String.format("%s%s = %s, ", !value.isEmpty() ? value + " " : "", key, defaultValueFromPhpType(value)));
+        });
 
         a(builder, String.format("public function __construct(%s) {", !parameters.get().isEmpty() ? parameters.get().substring(0, parameters.get().length() - 2) : ""), 1);
         fields.keySet().forEach(key -> this.a(builder, String.format("$this->%s = %s;", key.replace("$", ""), key), 2));
@@ -107,7 +109,9 @@ public class Parser {
 
 
         StringBuilder getters = new StringBuilder();
-        for (Method method : aClass.getDeclaredMethods()) {
+        List<Method> methods = new ArrayList<>(Arrays.asList(aClass.getDeclaredMethods()));
+        methods.sort(Comparator.comparing(Method::getName));
+        for (Method method : methods) {
             method.setAccessible(true);
 
             if (method.getName().startsWith("get")) {
@@ -116,7 +120,8 @@ public class Parser {
                     continue;
 
                 c(getters);
-                a(getters, String.format("public function %s(): %s {", method.getName(), javaToPhpType(method.getReturnType())), 1);
+                String type = javaToPhpType(method.getReturnType());
+                a(getters, String.format("public function %s()%s {", method.getName(), !type.isEmpty() ? ": " + type : ""), 1);
                 a(getters, String.format("return $this->%s;", field), 2);
                 a(getters, "}", 1);
             }
@@ -293,6 +298,7 @@ public class Parser {
         else if (type.isArray() || type.getName().endsWith("List"))      return "array";
         else if (type.getSimpleName().endsWith("Map"))                   return "array";
         else if (type == org.bson.Document.class)                        return "array";
+        else if (type == Object.class)                                   return "";
         else                                                             return type.getSimpleName();
     }
 

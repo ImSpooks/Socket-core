@@ -10,11 +10,15 @@ use client\enums\ClientType;
 use client\handler\Client;
 use client\packets\collection\network\PacketConfirmConnection;
 use client\packets\collection\network\PacketRequestConnection;
-use client\packets\collection\other\PacketResponseExpired;
+use client\packets\collection\network\PacketResponseExpired;
 use client\packets\init\Packet;
 use client\packets\init\PacketRegister;
 use client\packets\security\SecurityEncryption;
 use client\packets\security\shared\SharedEncryption;
+use Exception;
+use RuntimeException;
+use src\main\php\client\utils\ExceptionUtils;
+use Throwable;
 
 class PhpClient {
 
@@ -34,7 +38,7 @@ class PhpClient {
     private function tryConnect() {
         $this->sendAndReadPacket(new PacketRequestConnection(PASSWORD, $this->verificationId, CLIENT_NAME, ClientType::PHP["ID"]), function (PacketConfirmConnection $packet) {
             if ($packet->getRandomKey() == $this->verificationId) {
-                echo "Connection confirmed, packets can now be send.\n";
+//                echo "Connection confirmed, packets can now be send.\n";
                 $this->client->setCoreConnected(true);
             }
             else {
@@ -46,9 +50,14 @@ class PhpClient {
     }
 
     public function sendPacket(Packet $packet): bool {
-        if ($this->client->isCoreConnected() || $packet instanceof PacketRequestConnection) {
-            $this->client->write($packet);
-            return true;
+        try {
+            if ($this->client->isCoreConnected() || $packet instanceof PacketRequestConnection) {
+                $this->client->write($packet);
+                return true;
+            }
+        } catch (Throwable $e) {
+            $this->client->close();
+            ExceptionUtils::jTraceEx($e);
         }
         return false;
     }
@@ -71,41 +80,40 @@ class PhpClient {
 
     public static function requireAll($dir) {
         // settings
-        require_once "ClientSettings.php";
+        require_once $dir . "/client/ClientSettings.php";
 
         // utils
         foreach (self::listFolderFiles($dir . "/client/utils", true) as $file) {
-            require_once "utils/" . $file;
+            require_once $dir . "/client/utils/" . $file;
         }
 
         // enums
         foreach (self::listFolderFiles($dir . "/client/enums", true) as $file) {
-            require_once "enums/" . $file;
+            require_once $dir . "/client/enums/" . $file;
         }
 
         // security
-        require_once "packets/security/SecurityEncryption.php";
-        require_once "packets/security/shared/SharedEncryption.php";
+        require_once $dir . "/client/packets/security/SecurityEncryption.php";
+        require_once $dir . "/client/packets/security/shared/SharedEncryption.php";
         SharedEncryption::setEncryption(SecurityEncryption::newInstance(ENCRYPTION_KEY, INIT_VECTOR));
 
 
         // packet init
-        require_once "ClientSettingsExample.php";
-        require_once "packets/init/channels/WrappedInputStream.php";
-        require_once "packets/init/channels/WrappedOutputStream.php";
-        require_once "packets/type/PacketType.php";
-        require_once "packets/init/Packet.php";
+        require_once $dir . "/client/packets/init/channels/WrappedInputStream.php";
+        require_once $dir . "/client/packets/init/channels/WrappedOutputStream.php";
+        require_once $dir . "/client/packets/type/PacketType.php";
+        require_once $dir . "/client/packets/init/Packet.php";
 
         foreach (self::listFolderFiles($dir . "/client/packets/collection", true) as $file) {
 //            echo $file . "\n";
-            require_once "packets/collection/" . $file;
+            require_once $dir . "/client/packets/collection/" . $file;
         }
 
-        require_once "packets/init/PacketRegister.php";
+        require_once $dir . "/client/packets/init/PacketRegister.php";
         PacketRegister::init();
 
         // client
-        require_once "handler/Client.php";
+        require_once $dir . "/client/handler/Client.php";
     }
 
     // function that gets all files with subfolders

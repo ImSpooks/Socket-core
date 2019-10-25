@@ -3,10 +3,7 @@ package me.ImSpooks.core.parsepackets;
 import me.ImSpooks.core.packets.collection.GlobalPacket;
 import org.tinylog.Logger;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.util.*;
 
@@ -56,14 +53,43 @@ public class ParsePackets {
 
                 File file = new File(dir, fileName);
 
+                boolean existed = true;
                 if (!file.exists()) {
                     try {
                         Logger.info("Creating new file... " + fileName);
                         if (file.createNewFile()) {
+                            existed = false;
                             Logger.info("Created new file.");
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
+                    }
+                }
+
+                if (existed) {
+                    StringBuilder output = new StringBuilder();
+                    try (BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(file))) {
+                        int ch = bufferedInputStream.read();
+                        while (ch != -1) {
+                            output.append((char) ch);
+                            ch = bufferedInputStream.read();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    StringBuilder toReplace = new StringBuilder();
+                    for (int i = 0; i < 6; i++) {
+                        toReplace.append(output.toString().split("\n")[i]).append("\n");
+                    }
+                    output = new StringBuilder(output.toString().replace(toReplace, "").replace("\r", ""));
+                    toReplace = new StringBuilder();
+                    for (int i = 0; i < 6; i++) {
+                        toReplace.append(value.split("\n")[i]).append("\n");
+                    }
+                    String tmpValue = value.replace(toReplace, "").replace("\r", "");
+
+                    if (output.toString().equalsIgnoreCase(tmpValue)) {
+                        return;
                     }
                 }
 

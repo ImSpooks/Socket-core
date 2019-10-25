@@ -15,12 +15,15 @@ use client\utils\TimeUtils;
 
 require_once "client/PhpClient.php";
 PhpClient::requireAll(__DIR__);
-
 $client = new PhpClient(SERVER_IP, SERVER_PORT);
 
+$rows = [];
 
 $client->sendAndReadPacket(new PacketRequestCollection("test_table"), function (PacketRequestCollectionResponse $packet) {
     echo json_encode($packet->getDocuments()) . "\n";
+    $rows = $packet->getDocuments();
 }, function ($expired) {
 
 });
+
+$client->close();

@@ -5,7 +5,7 @@ out/
 .out/
 logs/
 config/
-database/
+database/*.json
 
 # files
 *.iml

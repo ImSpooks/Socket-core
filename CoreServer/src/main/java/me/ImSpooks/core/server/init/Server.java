@@ -3,6 +3,7 @@ package me.ImSpooks.core.server.init;
 import lombok.Getter;
 import me.ImSpooks.core.common.client.AbstractClient;
 import me.ImSpooks.core.common.interfaces.IServer;
+import me.ImSpooks.core.helpers.JavaHelpers;
 import me.ImSpooks.core.helpers.ThreadBuilder;
 import me.ImSpooks.core.packets.collection.network.PacketClosing;
 import me.ImSpooks.core.packets.init.Packet;
@@ -73,6 +74,7 @@ public class Server implements IServer {
                 Logger.error(e, "Something went wrong while handling client \'{}\', closing client...", client.getClientName().isEmpty() ? "unknown" : client.getClientName());
                 client.close();
             }
+            JavaHelpers.sleep(1);
         }
     }
 

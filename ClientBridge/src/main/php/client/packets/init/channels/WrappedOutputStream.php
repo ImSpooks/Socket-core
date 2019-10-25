@@ -2,6 +2,9 @@
 
 namespace client\packets\init\channels;
 
+use ArrayUtils;
+use UnexpectedValueException;
+
 /**
  * Created by Nick on 14 okt. 2019.
  * Copyright © ImSpooks
@@ -43,7 +46,7 @@ class WrappedOutputStream {
         array_push($this->out, $s);
     }
 
-    public function writeTypePrefixed(object $o) {
+    public function writeTypePrefixed($o) {
         if ($o == null) {
             $this->write(-1);
         }
