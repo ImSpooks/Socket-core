@@ -10,7 +10,7 @@ public interface IClient {
 
     void handlePacket(Packet receivedPacket);
 
-    void handleClient();
+    boolean handleClient();
 
     void connect();
 

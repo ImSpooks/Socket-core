@@ -47,6 +47,7 @@ public class Server implements IServer {
         new ThreadBuilder(this::handleClients, "Connection handler", Thread.MAX_PRIORITY).start();
     }
 
+    private long lastRequest = 0;
     @Override
     public void handleServer(AbstractClient client) {
         if (!(client instanceof ServerClient)) {
@@ -68,13 +69,19 @@ public class Server implements IServer {
             }
 
             try {
-                client.handleClient();
+                if (client.handleClient()) {
+                    lastRequest = System.currentTimeMillis();
+                }
             } catch (Exception e) {
                 this.clients.remove(client);
                 Logger.error(e, "Something went wrong while handling client \'{}\', closing client...", client.getClientName().isEmpty() ? "unknown" : client.getClientName());
                 client.close();
             }
-            JavaHelpers.sleep(1);
+
+            // sleep process 1 ms when no packets are being send for 1 second to minimize cpu load.
+            if (System.currentTimeMillis() - 1000 > lastRequest) {
+                JavaHelpers.sleep(1);
+            }
         }
     }
 

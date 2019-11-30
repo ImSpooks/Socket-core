@@ -33,10 +33,10 @@ public abstract class AbstractClient implements IClient {
 
     private String tmp = "";
     @Override
-    public void handleClient() {
+    public boolean handleClient() {
         try {
             if (this.socket.getInputStream().available() == 0) {
-                return;
+                return false;
             }
         } catch (IOException e) {
             Logger.error(e);
@@ -79,49 +79,49 @@ public abstract class AbstractClient implements IClient {
 
                 this.handlePacket(Packet.deserialize(s));
             }
-//            System.out.println();
-//            System.out.println();
-//            System.out.println();
-//            System.out.println();
-//
-//            System.out.println("packet = " + packet);
-//            System.out.println("trimmed = " + trimmed);
-//
-//            for (String s : trimmed.split("\n")) {
-//                s = s .trim();
-//                if (s.isEmpty())
-//                    continue;
-//
-//
-//            }
+            return true;
+/*            System.out.println();
+            System.out.println();
+            System.out.println();
+            System.out.println();
 
-//            StringBuilder packet = new StringBuilder();
-//            byte[] buffer = new byte[this.in.available()];
-//            in.read(buffer);
-//            packet.append(new String(buffer).replace("\r", ""));
-//
-//            String decoded = packet.toString().trim();
-//
-//            decoded = tmp.toString() + decoded;
-//
-//            if (decoded.startsWith("\n")) decoded = decoded.substring(1);
-//            if (decoded.isEmpty())
-//                return;
-//
-//            if (!decoded.startsWith("[") && decoded.endsWith("]")) {
-//                decoded = "[" + decoded;
-//            }
-//            if (!decoded.startsWith("[") || !decoded.endsWith("]")) {
-//                tmp.append(packet.toString());
-//                return;
-//            }
-//            if (!decoded.startsWith("[") && decoded.endsWith("]"))
-//                decoded = "[" + decoded;
-//            tmp = new StringBuilder();
-//
-//            decoded = decoded.trim();
+            System.out.println("packet = " + packet);
+            System.out.println("trimmed = " + trimmed);
+
+            for (String s : trimmed.split("\n")) {
+                s = s .trim();
+                if (s.isEmpty())
+                    continue;
+            }
+
+            StringBuilder packet = new StringBuilder();
+            byte[] buffer = new byte[this.in.available()];
+            in.read(buffer);
+            packet.append(new String(buffer).replace("\r", ""));
+
+            String decoded = packet.toString().trim();
+
+            decoded = tmp.toString() + decoded;
+
+            if (decoded.startsWith("\n")) decoded = decoded.substring(1);
+            if (decoded.isEmpty())
+                return;
+
+            if (!decoded.startsWith("[") && decoded.endsWith("]")) {
+                decoded = "[" + decoded;
+            }
+            if (!decoded.startsWith("[") || !decoded.endsWith("]")) {
+                tmp.append(packet.toString());
+                return;
+            }
+            if (!decoded.startsWith("[") && decoded.endsWith("]"))
+                decoded = "[" + decoded;
+            tmp = new StringBuilder();
+
+            decoded = decoded.trim();*/
         } catch (Exception e) {
             Logger.error(e);
+            return false;
         }
     }
 

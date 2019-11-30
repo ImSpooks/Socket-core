@@ -20,7 +20,7 @@ $total = [];
 
 $now = TimeUtils::currentTimeMillis();
 
-for ($i = 0; $i < 5000000; $i++) {
+for ($i = 0; $i < 50000; $i++) {
     $client->sendAndReadPacket(new PacketPing(TimeUtils::currentTimeMillis()), function (PacketPingResponse $packet) {
         global $toServer;
         global $toClient;

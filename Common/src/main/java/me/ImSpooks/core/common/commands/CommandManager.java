@@ -67,7 +67,6 @@ public class CommandManager {
         String commandInput = split[0];
         String[] args = Arrays.stream(input.substring(commandInput.length()).trim().split(" ")).filter(x -> !x.trim().isEmpty()).toArray(String[]::new);
 
-
         if (commandInput.equalsIgnoreCase("help")) {
             if (args.length == 2) {
                 try {

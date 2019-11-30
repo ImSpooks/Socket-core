@@ -66,7 +66,7 @@ public class Start {
             List<Long> total = new ArrayList<>();
 
             long start = System.currentTimeMillis();
-            int max = 8000;
+            int max = 10000;
 
 
             AtomicInteger received = new AtomicInteger(0);
